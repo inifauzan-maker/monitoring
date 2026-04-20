@@ -118,6 +118,8 @@ class LinkPublikController extends Controller
             'pengguna' => $pengguna,
             'linkAktif' => $linkAktif,
             'judulHalaman' => $pengguna->judulLinkPublik(),
+            'namaPublik' => $pengguna->namaTampilLinkPublik(),
+            'avatarPublikUrl' => $pengguna->avatarLinkPublikUrl(),
             'headlineHalaman' => $pengguna->headlineLinkPublik(),
             'bioHalaman' => $pengguna->bioLinkPublik(),
             'labelCta' => $pengguna->labelCtaLinkPublik(),

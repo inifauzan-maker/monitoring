@@ -97,6 +97,93 @@ return [
         ],
     ],
     [
+        'bagian' => 'LMS',
+        'items' => [
+            [
+                'judul' => 'Kursus',
+                'ikon' => 'kursus',
+                'route' => 'lms.kursus',
+                'aktif' => ['lms.kursus'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Materi',
+                'ikon' => 'materi',
+                'route' => 'lms.materi',
+                'aktif' => ['lms.materi'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Playlist',
+                'ikon' => 'playlist',
+                'route' => 'lms.playlist',
+                'aktif' => ['lms.playlist'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Progres Belajar',
+                'ikon' => 'progres_belajar',
+                'route' => 'lms.progres_belajar',
+                'aktif' => ['lms.progres_belajar'],
+                'level_minimal' => 'level_5',
+            ],
+        ],
+    ],
+    [
+        'bagian' => 'Projects',
+        'items' => [
+            [
+                'judul' => 'Daftar Project',
+                'ikon' => 'daftar_project',
+                'route' => 'proyek.daftar_project',
+                'aktif' => ['proyek.daftar_project', 'proyek.edit', 'proyek.store', 'proyek.update', 'proyek.destroy'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Detail Tugas',
+                'ikon' => 'detail_tugas',
+                'route' => 'proyek.detail_tugas',
+                'aktif' => ['proyek.detail_tugas', 'proyek.tugas.*'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Alur & SOP',
+                'ikon' => 'alur_sop',
+                'route' => 'proyek.alur_sop',
+                'aktif' => ['proyek.alur_sop'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Penanggung Jawab',
+                'ikon' => 'penanggung_jawab',
+                'route' => 'proyek.penanggung_jawab',
+                'aktif' => ['proyek.penanggung_jawab'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Progres',
+                'ikon' => 'progres',
+                'route' => 'proyek.progres',
+                'aktif' => ['proyek.progres'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Evaluasi',
+                'ikon' => 'evaluasi',
+                'route' => 'proyek.evaluasi',
+                'aktif' => ['proyek.evaluasi'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Pelaporan',
+                'ikon' => 'pelaporan',
+                'route' => 'proyek.pelaporan',
+                'aktif' => ['proyek.pelaporan'],
+                'level_minimal' => 'level_5',
+            ],
+        ],
+    ],
+    [
         'bagian' => 'Tools',
         'items' => [
             [
@@ -118,6 +205,13 @@ return [
     [
         'bagian' => 'Administrasi',
         'items' => [
+            [
+                'judul' => 'Log Aktivitas',
+                'ikon' => 'log_aktivitas',
+                'route' => 'administrasi.log_aktivitas.index',
+                'aktif' => ['administrasi.log_aktivitas.*'],
+                'level_minimal' => 'superadmin',
+            ],
             [
                 'judul' => 'Pengguna (RBAC)',
                 'ikon' => 'pengguna',

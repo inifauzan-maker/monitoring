@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\LinkPengguna;
 use App\Models\User;
 use App\Support\AnalitikLinkPublik;
+use App\Support\PencatatLogAktivitas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -77,11 +79,22 @@ class LinkController extends Controller
         $pengguna = $request->user();
         $data = $this->dataTervalidasi($request);
 
-        $pengguna->linkPengguna()->create([
+        $link = $pengguna->linkPengguna()->create([
             ...$data,
             'urutan' => $data['urutan'] ?? (($pengguna->linkPengguna()->max('urutan') ?? -1) + 1),
             'aktif' => true,
         ]);
+        PencatatLogAktivitas::catat(
+            $request,
+            'link',
+            'tambah',
+            'Link baru ditambahkan.',
+            $link,
+            [
+                'judul' => $link->judul,
+                'url' => $link->url,
+            ],
+        );
 
         return redirect()
             ->route('tools.link')
@@ -92,6 +105,12 @@ class LinkController extends Controller
     {
         abort_unless((int) $linkPengguna->user_id === (int) $request->user()->id, 404);
 
+        $snapshotSebelum = [
+            'judul' => $linkPengguna->judul,
+            'url' => $linkPengguna->url,
+            'aktif' => $linkPengguna->aktif,
+            'urutan' => $linkPengguna->urutan,
+        ];
         $data = $this->dataTervalidasi($request);
 
         $linkPengguna->update([
@@ -99,6 +118,29 @@ class LinkController extends Controller
             'urutan' => $data['urutan'] ?? $linkPengguna->urutan,
             'aktif' => $request->boolean('aktif'),
         ]);
+        $snapshotSesudah = [
+            'judul' => $linkPengguna->judul,
+            'url' => $linkPengguna->url,
+            'aktif' => $linkPengguna->aktif,
+            'urutan' => $linkPengguna->urutan,
+        ];
+        $kolomDiubah = collect($snapshotSesudah)
+            ->filter(fn ($value, string $key) => ($snapshotSebelum[$key] ?? null) !== $value)
+            ->keys()
+            ->values()
+            ->all();
+        PencatatLogAktivitas::catat(
+            $request,
+            'link',
+            'ubah',
+            'Link diperbarui.',
+            $linkPengguna,
+            [
+                'kolom_diubah' => $kolomDiubah,
+                'sebelum' => $snapshotSebelum,
+                'sesudah' => $snapshotSesudah,
+            ],
+        );
 
         return redirect()
             ->route('tools.link')
@@ -109,6 +151,18 @@ class LinkController extends Controller
     public function destroy(Request $request, LinkPengguna $linkPengguna): RedirectResponse
     {
         abort_unless((int) $linkPengguna->user_id === (int) $request->user()->id, 404);
+
+        PencatatLogAktivitas::catat(
+            $request,
+            'link',
+            'hapus',
+            'Link dihapus.',
+            $linkPengguna,
+            [
+                'judul' => $linkPengguna->judul,
+                'url' => $linkPengguna->url,
+            ],
+        );
 
         $linkPengguna->delete();
 
@@ -121,6 +175,13 @@ class LinkController extends Controller
     {
         $pengguna = $request->user();
         $this->pastikanProfilLinkPublik($pengguna);
+        $snapshotSebelum = [
+            'slug_link' => $pengguna->slug_link,
+            'nama_tampil_link' => $pengguna->nama_tampil_link,
+            'judul_link' => $pengguna->judul_link,
+            'tema_link' => $pengguna->tema_link,
+            'domain_kustom_link' => $pengguna->domain_kustom_link,
+        ];
 
         $data = $request->validate([
             'slug_link' => [
@@ -130,6 +191,7 @@ class LinkController extends Controller
                 'max:40',
                 Rule::unique('users', 'slug_link')->ignore($pengguna->id),
             ],
+            'nama_tampil_link' => ['nullable', 'string', 'max:80'],
             'judul_link' => ['nullable', 'string', 'max:80'],
             'headline_link' => ['nullable', 'string', 'max:120'],
             'bio_link' => ['nullable', 'string', 'max:320'],
@@ -145,6 +207,8 @@ class LinkController extends Controller
                 },
             ],
             'tema_link' => ['required', Rule::in(array_keys(User::opsiTemaLink()))],
+            'avatar_link' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'hapus_avatar_link' => ['nullable', 'boolean'],
             'domain_kustom_link' => [
                 'nullable',
                 'string',
@@ -172,9 +236,24 @@ class LinkController extends Controller
 
         $domainKustom = User::normalisasiDomainKustomLink($data['domain_kustom_link'] ?? null);
         $domainBerubah = $domainKustom !== $pengguna->domain_kustom_link;
+        $avatarLink = $pengguna->avatar_link;
+
+        if ($request->boolean('hapus_avatar_link') && filled($avatarLink)) {
+            Storage::disk('public')->delete($avatarLink);
+            $avatarLink = null;
+        }
+
+        if ($request->hasFile('avatar_link')) {
+            if (filled($avatarLink)) {
+                Storage::disk('public')->delete($avatarLink);
+            }
+
+            $avatarLink = $request->file('avatar_link')->store('avatar-link', 'public');
+        }
 
         $pengguna->update([
             'slug_link' => Str::lower($data['slug_link']),
+            'nama_tampil_link' => $data['nama_tampil_link'] ?: null,
             'judul_link' => $data['judul_link'] ?: null,
             'headline_link' => $data['headline_link'] ?: null,
             'bio_link' => $data['bio_link'] ?: null,
@@ -183,11 +262,37 @@ class LinkController extends Controller
                 ? LinkPengguna::normalisasiUrlEksternal($data['url_cta_link'])
                 : null,
             'tema_link' => $data['tema_link'],
+            'avatar_link' => $avatarLink,
             'domain_kustom_link' => $domainKustom,
             'domain_kustom_terhubung_pada' => $domainBerubah
                 ? null
                 : $pengguna->domain_kustom_terhubung_pada,
         ]);
+        $pengguna->refresh();
+        $snapshotSesudah = [
+            'slug_link' => $pengguna->slug_link,
+            'nama_tampil_link' => $pengguna->nama_tampil_link,
+            'judul_link' => $pengguna->judul_link,
+            'tema_link' => $pengguna->tema_link,
+            'domain_kustom_link' => $pengguna->domain_kustom_link,
+        ];
+        $kolomDiubah = collect($snapshotSesudah)
+            ->filter(fn ($value, string $key) => ($snapshotSebelum[$key] ?? null) !== $value)
+            ->keys()
+            ->values()
+            ->all();
+        PencatatLogAktivitas::catat(
+            $request,
+            'link',
+            'ubah',
+            'Profil link publik diperbarui.',
+            $pengguna,
+            [
+                'kolom_diubah' => $kolomDiubah,
+                'sebelum' => $snapshotSebelum,
+                'sesudah' => $snapshotSesudah,
+            ],
+        );
 
         return redirect()
             ->route('tools.link')

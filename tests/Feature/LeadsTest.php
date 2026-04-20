@@ -47,6 +47,15 @@ class LeadsTest extends TestCase
             'channel' => 'Instagram',
             'status' => 'prospek',
         ]);
+
+        $idLead = Lead::query()->where('nama_siswa', 'Ayu Putri')->value('id');
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'lead',
+            'aksi' => 'tambah',
+            'subjek_id' => $idLead,
+        ]);
     }
 
     public function test_pengguna_bisa_mencatat_tindak_lanjut_lead(): void
@@ -76,6 +85,13 @@ class LeadsTest extends TestCase
         $this->assertDatabaseHas('leads', [
             'id' => $lead->id,
             'status' => 'follow_up',
+        ]);
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'lead',
+            'aksi' => 'tindak_lanjut',
+            'subjek_id' => $lead->id,
         ]);
     }
 }

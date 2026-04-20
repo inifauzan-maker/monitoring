@@ -21,6 +21,20 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
 
         $response
             ->assertOk()
+            ->assertSee('LMS')
+            ->assertSee('Kursus')
+            ->assertSee('Materi')
+            ->assertSee('Playlist')
+            ->assertSee('Progres Belajar')
+            ->assertSee('Projects')
+            ->assertSee('Daftar Project')
+            ->assertSee('Detail Tugas')
+            ->assertSee('Alur & SOP')
+            ->assertSee('Penanggung Jawab')
+            ->assertSee('Progres')
+            ->assertSee('Evaluasi')
+            ->assertSee('Pelaporan')
+            ->assertSee('Log Aktivitas')
             ->assertSee('Pengguna (RBAC)')
             ->assertSee('Artikel')
             ->assertSee('Link')
@@ -47,6 +61,19 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
 
         $response
             ->assertOk()
+            ->assertSee('LMS')
+            ->assertSee('Kursus')
+            ->assertSee('Materi')
+            ->assertSee('Playlist')
+            ->assertSee('Progres Belajar')
+            ->assertSee('Projects')
+            ->assertSee('Daftar Project')
+            ->assertSee('Detail Tugas')
+            ->assertSee('Alur & SOP')
+            ->assertSee('Penanggung Jawab')
+            ->assertSee('Progres')
+            ->assertSee('Evaluasi')
+            ->assertSee('Pelaporan')
             ->assertSee('Artikel')
             ->assertSee('Link')
             ->assertSee('Omzet')
@@ -60,6 +87,7 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
             ->assertSee('Youtube')
             ->assertSee('Event')
             ->assertSee('Buzzer')
+            ->assertDontSee('Log Aktivitas')
             ->assertDontSee('Pengguna (RBAC)');
     }
 
@@ -73,6 +101,19 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
 
         $response
             ->assertOk()
+            ->assertSee('LMS')
+            ->assertSee('Kursus')
+            ->assertSee('Materi')
+            ->assertSee('Playlist')
+            ->assertSee('Progres Belajar')
+            ->assertSee('Projects')
+            ->assertSee('Daftar Project')
+            ->assertSee('Detail Tugas')
+            ->assertSee('Alur & SOP')
+            ->assertSee('Penanggung Jawab')
+            ->assertSee('Progres')
+            ->assertSee('Evaluasi')
+            ->assertSee('Pelaporan')
             ->assertSee('Artikel')
             ->assertSee('Link')
             ->assertSee('Omzet')
@@ -86,6 +127,7 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
             ->assertSee('Youtube')
             ->assertSee('Event')
             ->assertSee('Buzzer')
+            ->assertDontSee('Log Aktivitas')
             ->assertDontSee('Pengguna (RBAC)');
     }
 }

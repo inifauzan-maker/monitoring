@@ -135,9 +135,42 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('tools.link.profil.update') }}" class="d-grid gap-3">
+                    <div class="border rounded-3 p-3 mb-3">
+                        <div class="small text-secondary mb-2">Preview identitas publik</div>
+                        <div class="d-flex align-items-center gap-3">
+                            @if ($pengguna->avatarLinkPublikUrl())
+                                <img
+                                    src="{{ $pengguna->avatarLinkPublikUrl() }}"
+                                    alt="Avatar {{ $pengguna->namaTampilLinkPublik() }}"
+                                    class="avatar avatar-xl rounded-3 object-fit-cover"
+                                >
+                            @else
+                                <span class="avatar avatar-xl rounded-3 avatar-app">
+                                    {{ $pengguna->inisialLinkPublik() }}
+                                </span>
+                            @endif
+                            <div class="min-w-0">
+                                <div class="fw-semibold">{{ $pengguna->namaTampilLinkPublik() }}</div>
+                                <div class="text-secondary small text-break mt-1">{{ $pengguna->judulLinkPublik() }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ route('tools.link.profil.update') }}" class="d-grid gap-3" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
+
+                        <div>
+                            <label for="nama_tampil_link" class="form-label">Nama publik</label>
+                            <input
+                                id="nama_tampil_link"
+                                type="text"
+                                name="nama_tampil_link"
+                                value="{{ old('nama_tampil_link', $pengguna->nama_tampil_link) }}"
+                                class="form-control"
+                                placeholder="Nama yang tampil di halaman link publik"
+                            >
+                        </div>
 
                         <div>
                             <label for="slug_link" class="form-label">Slug publik</label>
@@ -170,13 +203,14 @@
                         </div>
 
                         <div>
-                            <label for="judul_link" class="form-label">Judul halaman publik</label>
+                            <label for="judul_link" class="form-label">Judul browser/halaman</label>
                             <input
                                 id="judul_link"
                                 type="text"
                                 name="judul_link"
-                                value="{{ old('judul_link', $pengguna->judul_link ?: $pengguna->name) }}"
+                                value="{{ old('judul_link', $pengguna->judul_link) }}"
                                 class="form-control"
+                                placeholder="Opsional, untuk title halaman atau nama brand"
                             >
                         </div>
 
@@ -206,6 +240,24 @@
                                 class="form-control"
                                 placeholder="Buka Tautan Utama"
                             >
+                        </div>
+
+                        <div>
+                            <label for="avatar_link" class="form-label">Avatar publik</label>
+                            <input
+                                id="avatar_link"
+                                type="file"
+                                name="avatar_link"
+                                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                class="form-control"
+                            >
+                            <div class="form-hint">Format: JPG, PNG, atau WebP. Maksimal 2 MB.</div>
+                            @if ($pengguna->avatar_link)
+                                <label class="form-check mt-2 mb-0">
+                                    <input class="form-check-input" type="checkbox" name="hapus_avatar_link" value="1" @checked(old('hapus_avatar_link'))>
+                                    <span class="form-check-label">Hapus avatar saat simpan</span>
+                                </label>
+                            @endif
                         </div>
 
                         <div>

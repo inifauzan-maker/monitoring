@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DataSiswa;
 use App\Models\ProdukItem;
+use App\Support\PencatatLogAktivitas;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -73,6 +74,35 @@ class OmzetController extends Controller
             ->orderByDesc('created_at')
             ->paginate(15)
             ->withQueryString();
+        $totalInvoice = (int) $rekap->sum('total_invoice');
+        $totalPembayaran = (int) $rekap->sum('jumlah_pembayaran');
+        $totalSisaTagihan = (int) $rekap->sum('sisa_tagihan');
+        $jumlahSiswaLunas = (int) $rekap->where('status_pembayaran', 'lunas')->count();
+
+        PencatatLogAktivitas::catat(
+            $request,
+            'omzet',
+            'lihat',
+            'Membuka rekap omzet.',
+            'laporan_omzet',
+            [
+                'filter' => [
+                    'tahun' => $selectedTahun,
+                    'bulan' => $selectedBulan > 0 ? $selectedBulan : null,
+                    'program' => $selectedProgram,
+                    'status_pembayaran' => $selectedStatusPembayaran,
+                    'halaman' => $transaksi->currentPage(),
+                ],
+                'ringkasan' => [
+                    'jumlah_transaksi' => $transaksi->total(),
+                    'jumlah_program' => $perProgram->count(),
+                    'total_invoice' => $totalInvoice,
+                    'total_pembayaran' => $totalPembayaran,
+                    'total_sisa_tagihan' => $totalSisaTagihan,
+                    'jumlah_siswa_lunas' => $jumlahSiswaLunas,
+                ],
+            ]
+        );
 
         return view('omzet.index', [
             'transaksi' => $transaksi,
@@ -84,10 +114,10 @@ class OmzetController extends Controller
             'selectedBulan' => $selectedBulan,
             'selectedProgram' => $selectedProgram,
             'selectedStatusPembayaran' => $selectedStatusPembayaran,
-            'totalInvoice' => (int) $rekap->sum('total_invoice'),
-            'totalPembayaran' => (int) $rekap->sum('jumlah_pembayaran'),
-            'totalSisaTagihan' => (int) $rekap->sum('sisa_tagihan'),
-            'jumlahSiswaLunas' => (int) $rekap->where('status_pembayaran', 'lunas')->count(),
+            'totalInvoice' => $totalInvoice,
+            'totalPembayaran' => $totalPembayaran,
+            'totalSisaTagihan' => $totalSisaTagihan,
+            'jumlahSiswaLunas' => $jumlahSiswaLunas,
         ]);
     }
 }

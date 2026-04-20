@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Lead;
 use App\Models\LeadTindakLanjut;
 use App\Models\User;
+use App\Support\PencatatLogAktivitas;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -84,7 +85,19 @@ class LeadController extends Controller
         $data['created_by'] = $request->user()->id;
         $data['kontak_terakhir'] = $data['status'] !== 'prospek' ? now() : null;
 
-        Lead::create($data);
+        $lead = Lead::create($data);
+        PencatatLogAktivitas::catat(
+            $request,
+            'lead',
+            'tambah',
+            'Lead baru ditambahkan.',
+            $lead,
+            [
+                'nama_siswa' => $lead->nama_siswa,
+                'channel' => $lead->channel,
+                'status' => $lead->status,
+            ],
+        );
 
         return back()->with('status', 'Prospek berhasil ditambahkan.');
     }
@@ -95,10 +108,22 @@ class LeadController extends Controller
             'status' => ['required', Rule::in(array_keys(Lead::statusOptions()))],
         ]);
 
+        $statusSebelum = $lead->status;
         $lead->forceFill([
             'status' => $data['status'],
             'kontak_terakhir' => now(),
         ])->save();
+        PencatatLogAktivitas::catat(
+            $request,
+            'lead',
+            'ubah',
+            'Status lead diperbarui.',
+            $lead,
+            [
+                'status_sebelum' => $statusSebelum,
+                'status_sesudah' => $lead->status,
+            ],
+        );
 
         return back()->with('status', 'Status prospek berhasil diperbarui.');
     }
@@ -118,7 +143,7 @@ class LeadController extends Controller
 
         $lead = Lead::query()->findOrFail($data['lead_id']);
 
-        $lead->tindakLanjut()->create([
+        $tindakLanjut = $lead->tindakLanjut()->create([
             'user_id' => $request->user()->id,
             'catatan' => $data['catatan'] ?? null,
             'jadwal_tindak_lanjut' => $data['jadwal_tindak_lanjut'] ?? null,
@@ -130,6 +155,18 @@ class LeadController extends Controller
             'kontak_terakhir' => now(),
             'status' => $lead->status === 'prospek' ? 'follow_up' : $lead->status,
         ])->save();
+        PencatatLogAktivitas::catat(
+            $request,
+            'lead',
+            'tindak_lanjut',
+            'Tindak lanjut lead dicatat.',
+            $lead,
+            [
+                'lead_tindak_lanjut_id' => $tindakLanjut->id,
+                'status_tindak_lanjut' => $tindakLanjut->status,
+                'status_lead_sesudah' => $lead->status,
+            ],
+        );
 
         return back()->with('status', 'Tindak lanjut prospek berhasil dicatat.');
     }

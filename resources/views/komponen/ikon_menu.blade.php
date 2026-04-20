@@ -75,6 +75,131 @@
         </svg>
         @break
 
+    @case('kursus')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
+            <path d="M8 5v14" />
+            <path d="M12 9h4" />
+            <path d="M12 13h4" />
+        </svg>
+        @break
+
+    @case('materi')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+            <path d="M9 8h6" />
+            <path d="M9 12h6" />
+            <path d="M9 16h4" />
+        </svg>
+        @break
+
+    @case('playlist')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M8 6h10" />
+            <path d="M8 12h10" />
+            <path d="M8 18h6" />
+            <path d="M4 6h.01" />
+            <path d="M4 12h.01" />
+            <path d="M4 18h.01" />
+        </svg>
+        @break
+
+    @case('progres_belajar')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M3 12h4l3 5l4 -10l3 5h4" />
+            <path d="M4 19h16" />
+        </svg>
+        @break
+
+    @case('daftar_project')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+            <path d="M9 8h6" />
+            <path d="M9 12h6" />
+            <path d="M9 16h4" />
+        </svg>
+        @break
+
+    @case('detail_tugas')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M9 11l3 3l8 -8" />
+            <path d="M20 12v7a1 1 0 0 1 -1 1h-14a1 1 0 0 1 -1 -1v-14a1 1 0 0 1 1 -1h11" />
+        </svg>
+        @break
+
+    @case('alur_sop')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M4 6h7" />
+            <path d="M13 6l2 2l-2 2" />
+            <path d="M15 8h5" />
+            <path d="M20 16h-7" />
+            <path d="M11 16l-2 -2l2 -2" />
+            <path d="M9 14h-5" />
+        </svg>
+        @break
+
+    @case('penanggung_jawab')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+            <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+        </svg>
+        @break
+
+    @case('progres')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M3 12h4l3 6l4 -12l3 6h4" />
+        </svg>
+        @break
+
+    @case('evaluasi')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M7 12l3 3l7 -7" />
+            <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2" />
+        </svg>
+        @break
+
+    @case('pelaporan')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+            <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+            <path d="M9 17h6" />
+            <path d="M9 13h6" />
+        </svg>
+        @break
+
     @case('ads_iklan')
         <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -165,6 +290,16 @@
             <path d="M13 17.5l1.5 -1.5a4 4 0 0 0 0 -5.5" />
             <path d="M7 17a4 4 0 0 1 0 -6l1 -1" />
             <path d="M17 7a4 4 0 0 1 0 6l-1 1" />
+        </svg>
+        @break
+
+    @case('log_aktivitas')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M12 8v4l3 3" />
+            <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5" />
         </svg>
         @break
 

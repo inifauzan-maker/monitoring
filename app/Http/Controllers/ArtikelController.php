@@ -8,6 +8,7 @@ use App\Models\ArtikelRevisi;
 use App\Models\KategoriArtikel;
 use App\Models\PresetEditorialPengguna;
 use App\Models\User;
+use App\Support\PencatatLogAktivitas;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -103,6 +104,17 @@ class ArtikelController extends Controller
 
     public function dashboardEditorial(Request $request): View
     {
+        PencatatLogAktivitas::catat(
+            $request,
+            'artikel',
+            'lihat',
+            'Membuka dashboard editorial artikel.',
+            'dashboard_editorial_artikel',
+            [
+                'filter' => $this->queryEditorialAktifDariRequest($request),
+            ]
+        );
+
         return view('tools.artikel.editorial', $this->dataDashboardEditorial($request));
     }
 
@@ -146,6 +158,18 @@ class ArtikelController extends Controller
             'konfigurasi_filter' => $konfigurasiFilter,
         ]);
 
+        PencatatLogAktivitas::catat(
+            $request,
+            'artikel',
+            'tambah',
+            'Menyimpan preset editorial kustom.',
+            $preset,
+            [
+                'nama_preset' => $preset->nama_preset,
+                'konfigurasi_filter' => $preset->konfigurasi_filter,
+            ]
+        );
+
         return redirect()
             ->route('tools.artikel.editorial', array_merge($konfigurasiFilter, ['preset_pengguna' => $preset->id]))
             ->with('status', 'Preset kustom berhasil disimpan.');
@@ -156,10 +180,23 @@ class ArtikelController extends Controller
         abort_unless((int) $presetEditorialPengguna->user_id === (int) $request->user()->id, 403, 'Akses ditolak.');
 
         $query = $this->queryEditorialAktifDariRequest($request);
+        $ringkasanPreset = [
+            'nama_preset' => $presetEditorialPengguna->nama_preset,
+            'konfigurasi_filter' => $presetEditorialPengguna->konfigurasi_filter,
+        ];
 
         if (($query['preset_pengguna'] ?? null) === (string) $presetEditorialPengguna->id) {
             unset($query['preset_pengguna']);
         }
+
+        PencatatLogAktivitas::catat(
+            $request,
+            'artikel',
+            'hapus',
+            'Menghapus preset editorial kustom.',
+            $presetEditorialPengguna,
+            $ringkasanPreset
+        );
 
         $presetEditorialPengguna->delete();
 
@@ -182,6 +219,16 @@ class ArtikelController extends Controller
         );
 
         $this->simpanRevisi($artikel, 'awal');
+        PencatatLogAktivitas::catat(
+            $request,
+            'artikel',
+            'tambah',
+            'Membuat draft artikel baru.',
+            $artikel,
+            [
+                'artikel' => $this->ringkasanAuditArtikel($artikel),
+            ]
+        );
 
         return redirect()
             ->route('tools.artikel.edit', $artikel)
@@ -208,6 +255,18 @@ class ArtikelController extends Controller
 
         $artikel->load(['kategori', 'penulis']);
 
+        PencatatLogAktivitas::catat(
+            $request,
+            'artikel',
+            'ekspor',
+            'Mengekspor artikel ke PDF.',
+            $artikel,
+            [
+                'mode' => $artikel->sudahTerbitAktif() ? 'publikasi' : 'preview',
+                'artikel' => $this->ringkasanAuditArtikel($artikel),
+            ]
+        );
+
         return Pdf::loadView('tools.artikel.pdf.artikel', [
             'artikel' => $artikel,
             'adalahPreview' => ! $artikel->sudahTerbitAktif(),
@@ -216,6 +275,17 @@ class ArtikelController extends Controller
 
     public function exportDashboardPdf(Request $request): Response
     {
+        PencatatLogAktivitas::catat(
+            $request,
+            'artikel',
+            'ekspor',
+            'Mengekspor dashboard editorial artikel ke PDF.',
+            'dashboard_editorial_artikel',
+            [
+                'filter' => $this->queryEditorialAktifDariRequest($request),
+            ]
+        );
+
         return Pdf::loadView('tools.artikel.pdf.editorial', $this->dataDashboardEditorial($request))
             ->setPaper('a4', 'portrait')
             ->download('dashboard-editorial-artikel.pdf');
@@ -251,12 +321,27 @@ class ArtikelController extends Controller
     public function update(Request $request, Artikel $artikel): RedirectResponse
     {
         $this->otorisasiArtikel($request, $artikel);
+        $sebelum = $this->ringkasanAuditArtikel($artikel);
+        $data = $this->validatedArtikelData($request, $artikel);
 
-        $artikel->update(
-            $this->validatedArtikelData($request, $artikel)
+        $artikel->fill($data);
+        $kolomDiubah = array_keys($artikel->getDirty());
+        $artikel->save();
+
+        $artikel = $artikel->fresh();
+        $this->simpanRevisi($artikel, 'manual');
+        PencatatLogAktivitas::catat(
+            $request,
+            'artikel',
+            'ubah',
+            'Memperbarui draft artikel.',
+            $artikel,
+            [
+                'sebelum' => $sebelum,
+                'sesudah' => $this->ringkasanAuditArtikel($artikel),
+                'kolom_diubah' => $kolomDiubah,
+            ]
         );
-
-        $this->simpanRevisi($artikel->fresh(), 'manual');
 
         return redirect()
             ->route('tools.artikel.edit', $artikel)
@@ -283,12 +368,27 @@ class ArtikelController extends Controller
     {
         $this->otorisasiArtikel($request, $artikel);
         abort_unless($revisi->artikel_id === $artikel->id, 404);
+        $sebelum = $this->ringkasanAuditArtikel($artikel);
 
         $this->simpanRevisi($artikel, 'sebelum_pulih', true);
 
         $artikel->update($this->payloadDariRevisi($revisi));
 
-        $this->simpanRevisi($artikel->fresh(), 'dipulihkan', true);
+        $artikel = $artikel->fresh();
+        $this->simpanRevisi($artikel, 'dipulihkan', true);
+        PencatatLogAktivitas::catat(
+            $request,
+            'artikel',
+            'ubah',
+            'Memulihkan revisi artikel.',
+            $artikel,
+            [
+                'revisi_id' => $revisi->id,
+                'tipe_pemicu_revisi' => $revisi->tipe_pemicu,
+                'sebelum' => $sebelum,
+                'sesudah' => $this->ringkasanAuditArtikel($artikel),
+            ]
+        );
 
         return redirect()
             ->route('tools.artikel.edit', $artikel)
@@ -298,6 +398,7 @@ class ArtikelController extends Controller
     public function terbitkan(Request $request, Artikel $artikel): RedirectResponse
     {
         $this->otorisasiArtikel($request, $artikel);
+        $sebelum = $this->ringkasanAuditArtikel($artikel);
 
         if ($masalah = $this->masalahPublikasi($artikel)) {
             return redirect()
@@ -319,6 +420,18 @@ class ArtikelController extends Controller
             : 'Artikel berhasil diterbitkan.';
 
         $this->simpanRevisi($artikel, $tipePemicu, true);
+        PencatatLogAktivitas::catat(
+            $request,
+            'artikel',
+            'ubah',
+            $pesan,
+            $artikel,
+            [
+                'sebelum' => $sebelum,
+                'sesudah' => $this->ringkasanAuditArtikel($artikel),
+                'mode_publikasi' => $artikel->sedangTerjadwal() ? 'terjadwal' : 'diterbitkan',
+            ]
+        );
 
         return redirect()
             ->route('tools.artikel.edit', $artikel)
@@ -328,13 +441,26 @@ class ArtikelController extends Controller
     public function batalkanTerbit(Request $request, Artikel $artikel): RedirectResponse
     {
         $this->otorisasiArtikel($request, $artikel);
+        $sebelum = $this->ringkasanAuditArtikel($artikel);
 
         $artikel->update([
             'sudah_diterbitkan' => false,
             'diterbitkan_pada' => null,
         ]);
 
-        $this->simpanRevisi($artikel->fresh(), 'dibatalkan_terbit', true);
+        $artikel = $artikel->fresh();
+        $this->simpanRevisi($artikel, 'dibatalkan_terbit', true);
+        PencatatLogAktivitas::catat(
+            $request,
+            'artikel',
+            'ubah',
+            'Mengembalikan artikel ke status draft.',
+            $artikel,
+            [
+                'sebelum' => $sebelum,
+                'sesudah' => $this->ringkasanAuditArtikel($artikel),
+            ]
+        );
 
         return redirect()
             ->route('tools.artikel.edit', $artikel)
@@ -344,10 +470,22 @@ class ArtikelController extends Controller
     public function destroy(Request $request, Artikel $artikel): RedirectResponse
     {
         $this->otorisasiArtikel($request, $artikel);
+        $ringkasanArtikel = $this->ringkasanAuditArtikel($artikel);
 
         if ($artikel->gambar_unggulan_path) {
             Storage::disk('public')->delete($artikel->gambar_unggulan_path);
         }
+
+        PencatatLogAktivitas::catat(
+            $request,
+            'artikel',
+            'hapus',
+            'Menghapus artikel.',
+            $artikel,
+            [
+                'artikel' => $ringkasanArtikel,
+            ]
+        );
 
         $artikel->delete();
 
@@ -983,5 +1121,24 @@ class ArtikelController extends Controller
             'tanggal_dari' => $request->query('tanggal_dari'),
             'tanggal_sampai' => $request->query('tanggal_sampai'),
         ], fn ($nilai) => filled($nilai));
+    }
+
+    private function ringkasanAuditArtikel(Artikel $artikel): array
+    {
+        $artikel->refresh();
+
+        return [
+            'judul' => $artikel->judul,
+            'slug' => $artikel->slug,
+            'kategori_artikel_id' => $artikel->kategori_artikel_id,
+            'penulis_id' => $artikel->penulis_id,
+            'tingkat_keahlian' => $artikel->tingkat_keahlian,
+            'sudah_diterbitkan' => (bool) $artikel->sudah_diterbitkan,
+            'status_publikasi' => $artikel->labelStatusPublikasi(),
+            'diterbitkan_pada' => $artikel->diterbitkan_pada?->toDateTimeString(),
+            'jumlah_referensi' => count($artikel->sumber_referensi ?? []),
+            'punya_gambar_unggulan' => filled($artikel->gambar_unggulan_path),
+            'skor_kesiapan' => $artikel->evaluasiKesiapan()['skor'],
+        ];
     }
 }

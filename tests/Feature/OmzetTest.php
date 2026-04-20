@@ -99,5 +99,11 @@ class OmzetTest extends TestCase
             ->assertOk()
             ->assertSee('Siswa Lunas')
             ->assertDontSee('Siswa Belum Lunas');
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'omzet',
+            'aksi' => 'lihat',
+        ]);
     }
 }

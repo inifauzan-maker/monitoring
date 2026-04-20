@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\KategoriArtikel;
+use App\Support\PencatatLogAktivitas;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,7 +38,19 @@ class KategoriArtikelController extends Controller
             'deskripsi' => 'deskripsi',
         ]);
 
-        KategoriArtikel::create($data);
+        $kategoriArtikel = KategoriArtikel::create($data);
+
+        PencatatLogAktivitas::catat(
+            $request,
+            'artikel',
+            'tambah',
+            'Menambahkan kategori artikel.',
+            $kategoriArtikel,
+            [
+                'nama' => $kategoriArtikel->nama,
+                'slug' => $kategoriArtikel->slug,
+            ]
+        );
 
         return back()->with('status', 'Kategori artikel berhasil ditambahkan.');
     }
@@ -49,6 +62,18 @@ class KategoriArtikelController extends Controller
                 'kategori' => 'Kategori masih dipakai oleh artikel dan belum bisa dihapus.',
             ]);
         }
+
+        PencatatLogAktivitas::catat(
+            request(),
+            'artikel',
+            'hapus',
+            'Menghapus kategori artikel.',
+            $kategoriArtikel,
+            [
+                'nama' => $kategoriArtikel->nama,
+                'slug' => $kategoriArtikel->slug,
+            ]
+        );
 
         $kategoriArtikel->delete();
 

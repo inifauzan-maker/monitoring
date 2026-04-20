@@ -225,6 +225,23 @@ body {
     text-transform: uppercase;
 }
 
+.avatar-link-publik-frame {
+    width: 6rem;
+    height: 6rem;
+    border: 1px solid var(--link-publik-border);
+    border-radius: 1.25rem;
+    background: var(--link-publik-surface-soft);
+    overflow: hidden;
+    box-shadow: 0 18px 40px -26px rgba(15, 23, 42, 0.65);
+}
+
+.avatar-link-publik-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
 .headline-link-publik {
     color: var(--link-publik-accent-soft);
     font-size: 1rem;

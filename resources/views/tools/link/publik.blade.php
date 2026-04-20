@@ -22,9 +22,15 @@
         <div class="container container-tight py-5">
             <div class="panel-link-publik">
                 <div class="text-center">
-                    <div class="avatar avatar-xl avatar-app mx-auto mb-3">
-                        {{ str($pengguna->name)->upper()->substr(0, 2) }}
-                    </div>
+                    @if ($avatarPublikUrl)
+                        <div class="avatar-link-publik-frame mx-auto mb-3">
+                            <img src="{{ $avatarPublikUrl }}" alt="Avatar {{ $namaPublik }}" class="avatar-link-publik-img">
+                        </div>
+                    @else
+                        <div class="avatar avatar-xl avatar-app mx-auto mb-3">
+                            {{ $pengguna->inisialLinkPublik() }}
+                        </div>
+                    @endif
                     <div class="d-flex justify-content-center gap-2 flex-wrap">
                         <div class="badge-link-publik">Link Publik</div>
                         <div class="badge-link-publik">{{ $temaHalaman['label'] }}</div>
@@ -35,7 +41,7 @@
                             <div class="badge-link-publik">Source: {{ $sourceAktif }}</div>
                         @endif
                     </div>
-                    <h1 class="mt-3 mb-2">{{ $judulHalaman }}</h1>
+                    <h1 class="mt-3 mb-2">{{ $namaPublik }}</h1>
                     @if ($headlineHalaman)
                         <div class="headline-link-publik">{{ $headlineHalaman }}</div>
                     @endif

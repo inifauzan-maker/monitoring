@@ -45,6 +45,12 @@ class ArtikelTest extends TestCase
         $response
             ->assertOk()
             ->assertSee('Dashboard Editorial Artikel');
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'artikel',
+            'aksi' => 'lihat',
+        ]);
     }
 
     public function test_dashboard_editorial_bisa_difilter_per_penulis_dan_kategori(): void
@@ -267,6 +273,12 @@ class ArtikelTest extends TestCase
             'user_id' => $pengguna->id,
             'nama_preset' => 'Filter Penulis Saya',
         ]);
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'artikel',
+            'aksi' => 'tambah',
+        ]);
     }
 
     public function test_dashboard_editorial_hanya_menampilkan_preset_kustom_milik_pengguna_login(): void
@@ -375,6 +387,12 @@ class ArtikelTest extends TestCase
             'nama' => 'Strategi Konten',
             'slug' => 'strategi-konten',
         ]);
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'artikel',
+            'aksi' => 'tambah',
+        ]);
     }
 
     public function test_pengguna_bisa_membuat_draft_artikel(): void
@@ -410,6 +428,13 @@ class ArtikelTest extends TestCase
         $this->assertDatabaseHas('artikel_revisi', [
             'artikel_id' => $artikel->id,
             'tipe_pemicu' => 'awal',
+        ]);
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'artikel',
+            'aksi' => 'tambah',
+            'subjek_id' => $artikel->id,
         ]);
     }
 
@@ -529,6 +554,13 @@ class ArtikelTest extends TestCase
             'artikel_id' => $artikel->id,
             'tipe_pemicu' => 'diterbitkan',
         ]);
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'artikel',
+            'aksi' => 'ubah',
+            'subjek_id' => $artikel->id,
+        ]);
     }
 
     public function test_penulis_bisa_menjadwalkan_terbit_artikel(): void
@@ -627,6 +659,13 @@ class ArtikelTest extends TestCase
             'artikel_id' => $artikel->id,
             'tipe_pemicu' => 'dibatalkan_terbit',
         ]);
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'artikel',
+            'aksi' => 'ubah',
+            'subjek_id' => $artikel->id,
+        ]);
     }
 
     public function test_penulis_bisa_memulihkan_revisi_artikel(): void
@@ -693,6 +732,13 @@ class ArtikelTest extends TestCase
 
         $response->assertOk();
         $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'artikel',
+            'aksi' => 'ekspor',
+            'subjek_id' => $artikel->id,
+        ]);
     }
 
     public function test_pengguna_bisa_export_pdf_dashboard_editorial(): void
@@ -705,5 +751,11 @@ class ArtikelTest extends TestCase
 
         $response->assertOk();
         $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'artikel',
+            'aksi' => 'ekspor',
+        ]);
     }
 }

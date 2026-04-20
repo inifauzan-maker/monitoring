@@ -57,7 +57,7 @@
                             ->values();
                     @endphp
 
-                    @continue($itemTerlihat->isEmpty())
+                    @continue($itemTerlihat->isEmpty() && ! ($bagian['selalu_tampil'] ?? false))
 
                     @if ($indeksBagian > 0)
                         <li class="nav-item mt-4">

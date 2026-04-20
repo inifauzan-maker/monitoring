@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Autentikasi\SesiController;
+use App\Http\Controllers\Administrasi\LogAktivitasController;
 use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\KampanyeController;
 use App\Http\Controllers\KategoriArtikelController;
@@ -8,9 +9,11 @@ use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LinkAnalitikExportController;
 use App\Http\Controllers\LinkController;
 use App\Http\Controllers\LinkPublikController;
+use App\Http\Controllers\LmsController;
 use App\Http\Controllers\OmzetController;
 use App\Http\Controllers\Pengaturan\PenggunaController;
 use App\Http\Controllers\ProdukController;
+use App\Http\Controllers\ProyekController;
 use App\Http\Controllers\SiswaController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +34,35 @@ Route::middleware('auth')->group(function () {
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
     Route::get('/leads', [LeadController::class, 'index'])->name('leads.index');
     Route::get('/produk', [ProdukController::class, 'index'])->name('produk.index');
+    Route::prefix('lms')
+        ->name('lms.')
+        ->group(function () {
+            Route::get('/kursus', [LmsController::class, 'kursus'])->name('kursus');
+            Route::get('/materi', [LmsController::class, 'materi'])->name('materi');
+            Route::get('/playlist', [LmsController::class, 'playlist'])->name('playlist');
+            Route::get('/progres-belajar', [LmsController::class, 'progresBelajar'])->name('progres_belajar');
+        });
+    Route::prefix('proyek')
+        ->name('proyek.')
+        ->group(function () {
+            Route::get('/daftar-project', [ProyekController::class, 'daftarProject'])->name('daftar_project');
+            Route::post('/daftar-project', [ProyekController::class, 'store'])->name('store');
+            Route::get('/daftar-project/{proyek}/ubah', [ProyekController::class, 'edit'])->name('edit');
+            Route::put('/daftar-project/{proyek}', [ProyekController::class, 'update'])->name('update');
+            Route::delete('/daftar-project/{proyek}', [ProyekController::class, 'destroy'])->name('destroy');
+            Route::get('/detail-tugas', [ProyekController::class, 'detailTugas'])->name('detail_tugas');
+            Route::post('/detail-tugas', [ProyekController::class, 'storeTugas'])->name('tugas.store');
+            Route::get('/detail-tugas/{tugasProyek}/histori', [ProyekController::class, 'historiTugas'])->name('tugas.histori');
+            Route::get('/detail-tugas/{tugasProyek}/ubah', [ProyekController::class, 'editTugas'])->name('tugas.edit');
+            Route::patch('/detail-tugas/{tugasProyek}/status-cepat', [ProyekController::class, 'perbaruiStatusTugasCepat'])->name('tugas.status_cepat');
+            Route::put('/detail-tugas/{tugasProyek}', [ProyekController::class, 'updateTugas'])->name('tugas.update');
+            Route::delete('/detail-tugas/{tugasProyek}', [ProyekController::class, 'destroyTugas'])->name('tugas.destroy');
+            Route::get('/alur-sop', [ProyekController::class, 'alurSop'])->name('alur_sop');
+            Route::get('/penanggung-jawab', [ProyekController::class, 'penanggungJawab'])->name('penanggung_jawab');
+            Route::get('/progres', [ProyekController::class, 'progres'])->name('progres');
+            Route::get('/evaluasi', [ProyekController::class, 'evaluasi'])->name('evaluasi');
+            Route::get('/pelaporan', [ProyekController::class, 'pelaporan'])->name('pelaporan');
+        });
     Route::prefix('kampanye')
         ->name('kampanye.')
         ->group(function () {
@@ -92,6 +124,12 @@ Route::middleware('auth')->group(function () {
         });
 
     Route::middleware('level_akses:superadmin')->group(function () {
+        Route::prefix('administrasi/log-aktivitas')
+            ->name('administrasi.log_aktivitas.')
+            ->group(function () {
+                Route::get('/', [LogAktivitasController::class, 'index'])->name('index');
+            });
+
         Route::post('/siswa', [SiswaController::class, 'store'])->name('siswa.store');
         Route::get('/siswa/{siswa}/ubah', [SiswaController::class, 'edit'])->name('siswa.edit');
         Route::put('/siswa/{siswa}', [SiswaController::class, 'update'])->name('siswa.update');

@@ -11,17 +11,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'name',
     'email',
     'slug_link',
+    'nama_tampil_link',
     'judul_link',
     'headline_link',
     'bio_link',
     'label_cta_link',
     'url_cta_link',
     'tema_link',
+    'avatar_link',
     'domain_kustom_link',
     'domain_kustom_terhubung_pada',
     'password',
@@ -97,9 +101,47 @@ class User extends Authenticatable
         return $this->hasMany(AktivitasLinkPublik::class, 'user_id');
     }
 
+    public function logAktivitas(): HasMany
+    {
+        return $this->hasMany(LogAktivitas::class, 'user_id');
+    }
+
+    public function proyekDibuat(): HasMany
+    {
+        return $this->hasMany(Proyek::class, 'dibuat_oleh');
+    }
+
+    public function proyekDitanggungjawabi(): HasMany
+    {
+        return $this->hasMany(Proyek::class, 'penanggung_jawab_id');
+    }
+
+    public function tugasProyekDitanggungjawabi(): HasMany
+    {
+        return $this->hasMany(TugasProyek::class, 'penanggung_jawab_id');
+    }
+
     public function judulLinkPublik(): string
     {
-        return $this->judul_link ?: $this->name;
+        return $this->judul_link ?: $this->namaTampilLinkPublik();
+    }
+
+    public function namaTampilLinkPublik(): string
+    {
+        return $this->nama_tampil_link ?: $this->judul_link ?: $this->name;
+    }
+
+    public function inisialLinkPublik(): string
+    {
+        $inisial = Str::of($this->namaTampilLinkPublik())
+            ->trim()
+            ->explode(' ')
+            ->filter()
+            ->take(2)
+            ->map(fn (string $bagian) => Str::upper(Str::substr($bagian, 0, 1)))
+            ->implode('');
+
+        return $inisial !== '' ? $inisial : 'LP';
     }
 
     public function headlineLinkPublik(): ?string
@@ -120,6 +162,15 @@ class User extends Authenticatable
     public function urlCtaLinkPublik(): ?string
     {
         return LinkPengguna::normalisasiUrlEksternal($this->url_cta_link);
+    }
+
+    public function avatarLinkPublikUrl(): ?string
+    {
+        if (! filled($this->avatar_link)) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->avatar_link);
     }
 
     public function temaLinkKonfigurasi(): array

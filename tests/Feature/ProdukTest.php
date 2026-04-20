@@ -75,6 +75,15 @@ class ProdukTest extends TestCase
             'nama' => 'Program Reguler',
             'omzet' => 10000000,
         ]);
+
+        $idProduk = ProdukItem::query()->where('nama', 'Program Reguler')->value('id');
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'produk',
+            'aksi' => 'tambah',
+            'subjek_id' => $idProduk,
+        ]);
     }
 
     public function test_superadmin_bisa_memfilter_produk_berdasarkan_program(): void

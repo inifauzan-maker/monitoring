@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DataSiswa;
 use App\Models\ProdukItem;
+use App\Support\PencatatLogAktivitas;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -31,7 +32,20 @@ class SiswaController extends Controller
 
         $data = $this->preparePayload($this->validatedData($request), null, $request);
 
-        DataSiswa::create($data);
+        $siswa = DataSiswa::create($data);
+        PencatatLogAktivitas::catat(
+            $request,
+            'siswa',
+            'tambah',
+            'Data siswa baru ditambahkan.',
+            $siswa,
+            [
+                'nama_lengkap' => $siswa->nama_lengkap,
+                'program' => $siswa->program,
+                'status_validasi' => $siswa->status_validasi,
+                'status_pembayaran' => $siswa->status_pembayaran,
+            ],
+        );
 
         return redirect()
             ->route('siswa.index', $this->filterQuery(
@@ -48,9 +62,40 @@ class SiswaController extends Controller
     {
         $this->authorizeSuperadmin($request);
 
+        $snapshotSebelum = [
+            'nama_lengkap' => $siswa->nama_lengkap,
+            'program' => $siswa->program,
+            'status_validasi' => $siswa->status_validasi,
+            'status_pembayaran' => $siswa->status_pembayaran,
+            'jumlah_pembayaran' => $siswa->jumlah_pembayaran,
+        ];
         $data = $this->preparePayload($this->validatedData($request), $siswa, $request);
 
         $siswa->update($data);
+        $snapshotSesudah = [
+            'nama_lengkap' => $siswa->nama_lengkap,
+            'program' => $siswa->program,
+            'status_validasi' => $siswa->status_validasi,
+            'status_pembayaran' => $siswa->status_pembayaran,
+            'jumlah_pembayaran' => $siswa->jumlah_pembayaran,
+        ];
+        $kolomDiubah = collect($snapshotSesudah)
+            ->filter(fn ($value, string $key) => ($snapshotSebelum[$key] ?? null) !== $value)
+            ->keys()
+            ->values()
+            ->all();
+        PencatatLogAktivitas::catat(
+            $request,
+            'siswa',
+            'ubah',
+            'Data siswa diperbarui.',
+            $siswa,
+            [
+                'kolom_diubah' => $kolomDiubah,
+                'sebelum' => $snapshotSebelum,
+                'sesudah' => $snapshotSesudah,
+            ],
+        );
 
         return redirect()
             ->route('siswa.index', $this->filterQuery(
@@ -66,6 +111,19 @@ class SiswaController extends Controller
     public function destroy(Request $request, DataSiswa $siswa): RedirectResponse
     {
         $this->authorizeSuperadmin($request);
+
+        PencatatLogAktivitas::catat(
+            $request,
+            'siswa',
+            'hapus',
+            'Data siswa dihapus.',
+            $siswa,
+            [
+                'nama_lengkap' => $siswa->nama_lengkap,
+                'program' => $siswa->program,
+                'status_validasi' => $siswa->status_validasi,
+            ],
+        );
 
         $siswa->delete();
 

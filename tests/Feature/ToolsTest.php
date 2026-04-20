@@ -8,8 +8,10 @@ use App\Models\LinkPengguna;
 use App\Models\StatistikLinkHarian;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ToolsTest extends TestCase
@@ -35,13 +37,17 @@ class ToolsTest extends TestCase
 
     public function test_pengguna_bisa_memperbarui_profil_link_publik_dan_domain_kustom(): void
     {
+        Storage::fake('public');
+
         $pengguna = User::factory()->denganLevelAkses(LevelAksesPengguna::LEVEL_5)->create([
             'slug_link' => 'profil-awal-1',
         ]);
 
         $this->actingAs($pengguna)
-            ->put(route('tools.link.profil.update'), [
+            ->post(route('tools.link.profil.update'), [
+                '_method' => 'PUT',
                 'slug_link' => 'profil-baru',
+                'nama_tampil_link' => 'Superadmin Publik',
                 'domain_kustom_link' => 'Link.Monitoring.Test',
                 'judul_link' => 'Link Publik Monitoring',
                 'headline_link' => 'Satu pintu untuk semua tautan penting',
@@ -49,12 +55,14 @@ class ToolsTest extends TestCase
                 'label_cta_link' => 'Hubungi Tim',
                 'url_cta_link' => 'example.com/kontak',
                 'tema_link' => 'mint',
+                'avatar_link' => UploadedFile::fake()->image('avatar-link.png', 400, 400),
             ])
             ->assertRedirect(route('tools.link'));
 
         $this->assertDatabaseHas('users', [
             'id' => $pengguna->id,
             'slug_link' => 'profil-baru',
+            'nama_tampil_link' => 'Superadmin Publik',
             'domain_kustom_link' => 'link.monitoring.test',
             'judul_link' => 'Link Publik Monitoring',
             'headline_link' => 'Satu pintu untuk semua tautan penting',
@@ -63,6 +71,11 @@ class ToolsTest extends TestCase
             'url_cta_link' => 'https://example.com/kontak',
             'tema_link' => 'mint',
         ]);
+
+        $pengguna->refresh();
+
+        $this->assertNotNull($pengguna->avatar_link);
+        Storage::disk('public')->assertExists($pengguna->avatar_link);
     }
 
     public function test_pengguna_bisa_menambah_link_dengan_url_dinormalisasi(): void
@@ -84,6 +97,15 @@ class ToolsTest extends TestCase
             'url' => 'https://example.com/program',
             'urutan' => 3,
             'aktif' => true,
+        ]);
+
+        $idLink = LinkPengguna::query()->where('judul', 'Katalog Program')->value('id');
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'link',
+            'aksi' => 'tambah',
+            'subjek_id' => $idLink,
         ]);
     }
 
@@ -218,6 +240,28 @@ class ToolsTest extends TestCase
             'user_id' => $pengguna->id,
             'jenis_aktivitas' => StatistikLinkHarian::KUNJUNGAN_HALAMAN,
         ]);
+    }
+
+    public function test_halaman_link_publik_menampilkan_nama_kustom_dan_avatar(): void
+    {
+        Storage::fake('public');
+
+        $avatarPath = UploadedFile::fake()
+            ->image('avatar-publik.png', 480, 480)
+            ->store('avatar-link', 'public');
+
+        $pengguna = User::factory()->create([
+            'slug_link' => 'avatar-link-1',
+            'nama_tampil_link' => 'Nama Publik Admin',
+            'judul_link' => 'Brand Monitoring',
+            'avatar_link' => $avatarPath,
+        ]);
+
+        $this->get(route('publik.link.show', $pengguna))
+            ->assertOk()
+            ->assertSee('Nama Publik Admin')
+            ->assertSee('Brand Monitoring')
+            ->assertSee(Storage::disk('public')->url($avatarPath), false);
     }
 
     public function test_buka_link_publik_menambah_total_klik_dan_redirect_ke_url_tujuan(): void

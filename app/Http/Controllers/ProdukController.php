@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProdukItem;
+use App\Support\PencatatLogAktivitas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -41,7 +42,19 @@ class ProdukController extends Controller
         $data = $this->normalizeProgram($data);
         $data['omzet'] = $this->calculateOmzet($data);
 
-        ProdukItem::create($data);
+        $produk = ProdukItem::create($data);
+        PencatatLogAktivitas::catat(
+            $request,
+            'produk',
+            'tambah',
+            'Produk baru ditambahkan.',
+            $produk,
+            [
+                'program' => $produk->program,
+                'nama' => $produk->nama,
+                'omzet' => $produk->omzet,
+            ],
+        );
 
         return redirect()
             ->route('produk.index', $this->filterQuery(
@@ -81,11 +94,40 @@ class ProdukController extends Controller
     {
         $this->authorizeSuperadmin($request);
 
+        $snapshotSebelum = [
+            'program' => $produk->program,
+            'nama' => $produk->nama,
+            'tahun_ajaran' => $produk->tahun_ajaran,
+            'omzet' => $produk->omzet,
+        ];
         $data = $this->validatedData($request);
         $data = $this->normalizeProgram($data);
         $data['omzet'] = $this->calculateOmzet($data);
 
         $produk->update($data);
+        $snapshotSesudah = [
+            'program' => $produk->program,
+            'nama' => $produk->nama,
+            'tahun_ajaran' => $produk->tahun_ajaran,
+            'omzet' => $produk->omzet,
+        ];
+        $kolomDiubah = collect($snapshotSesudah)
+            ->filter(fn ($value, string $key) => ($snapshotSebelum[$key] ?? null) !== $value)
+            ->keys()
+            ->values()
+            ->all();
+        PencatatLogAktivitas::catat(
+            $request,
+            'produk',
+            'ubah',
+            'Data produk diperbarui.',
+            $produk,
+            [
+                'kolom_diubah' => $kolomDiubah,
+                'sebelum' => $snapshotSebelum,
+                'sesudah' => $snapshotSesudah,
+            ],
+        );
 
         return redirect()
             ->route('produk.index', $this->filterQuery(
@@ -99,6 +141,19 @@ class ProdukController extends Controller
     public function destroy(Request $request, ProdukItem $produk): RedirectResponse
     {
         $this->authorizeSuperadmin($request);
+
+        PencatatLogAktivitas::catat(
+            $request,
+            'produk',
+            'hapus',
+            'Produk dihapus.',
+            $produk,
+            [
+                'program' => $produk->program,
+                'nama' => $produk->nama,
+                'omzet' => $produk->omzet,
+            ],
+        );
 
         $produk->delete();
 

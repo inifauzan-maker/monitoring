@@ -75,6 +75,15 @@ class SiswaTest extends TestCase
             'jumlah_pembayaran' => 300000,
             'status_pembayaran' => 'sebagian',
         ]);
+
+        $idSiswa = DataSiswa::query()->where('nama_lengkap', 'Bima Aditya')->value('id');
+
+        $this->assertDatabaseHas('log_aktivitas', [
+            'user_id' => $pengguna->id,
+            'modul' => 'siswa',
+            'aksi' => 'tambah',
+            'subjek_id' => $idSiswa,
+        ]);
     }
 
     public function test_superadmin_bisa_memfilter_siswa_berdasarkan_program(): void

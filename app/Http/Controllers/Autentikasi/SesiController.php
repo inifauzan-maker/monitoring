@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Autentikasi;
 
 use App\Http\Controllers\Controller;
+use App\Support\PencatatLogAktivitas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,18 +27,49 @@ class SesiController extends Controller
         ]);
 
         if (! Auth::attempt($kredensial, $request->boolean('ingat_saya'))) {
+            PencatatLogAktivitas::catat(
+                $request,
+                'autentikasi',
+                'masuk_gagal',
+                'Percobaan masuk gagal.',
+                'sesi',
+                ['email' => $kredensial['email']],
+                null,
+            );
+
             return back()
                 ->withErrors(['email' => 'Email atau password tidak sesuai.'])
                 ->onlyInput('email');
         }
 
         $request->session()->regenerate();
+        PencatatLogAktivitas::catat(
+            $request,
+            'autentikasi',
+            'masuk',
+            'Pengguna berhasil masuk ke aplikasi.',
+            $request->user(),
+        );
 
         return redirect()->intended(route('dashboard.beranda'));
     }
 
     public function destroy(Request $request): RedirectResponse
     {
+        $pengguna = $request->user();
+
+        if ($pengguna) {
+            PencatatLogAktivitas::catat(
+                $request,
+                'autentikasi',
+                'keluar',
+                'Pengguna keluar dari aplikasi.',
+                $pengguna,
+                [],
+                $pengguna,
+            );
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

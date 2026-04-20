@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Pengaturan;
 use App\Enums\LevelAksesPengguna;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\PencatatLogAktivitas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -41,7 +42,18 @@ class PenggunaController extends Controller
     {
         $data = $this->validasiPengguna($request);
 
-        User::create($data);
+        $penggunaBaru = User::create($data);
+        PencatatLogAktivitas::catat(
+            $request,
+            'pengguna',
+            'tambah',
+            'Pengguna baru berhasil ditambahkan.',
+            $penggunaBaru,
+            [
+                'email' => $penggunaBaru->email,
+                'level_akses' => $penggunaBaru->level_akses?->value,
+            ],
+        );
 
         return redirect()
             ->route('pengaturan.pengguna.index')
@@ -64,6 +76,11 @@ class PenggunaController extends Controller
     public function update(Request $request, User $pengguna): RedirectResponse
     {
         $data = $this->validasiPengguna($request, $pengguna);
+        $snapshotSebelum = [
+            'name' => $pengguna->name,
+            'email' => $pengguna->email,
+            'level_akses' => $pengguna->level_akses?->value,
+        ];
 
         if (
             $pengguna->adalahSuperadmin()
@@ -80,6 +97,29 @@ class PenggunaController extends Controller
         }
 
         $pengguna->update($data);
+        $snapshotSesudah = [
+            'name' => $pengguna->name,
+            'email' => $pengguna->email,
+            'level_akses' => $pengguna->level_akses?->value,
+        ];
+        $kolomDiubah = collect($snapshotSesudah)
+            ->filter(fn ($value, string $key) => ($snapshotSebelum[$key] ?? null) !== $value)
+            ->keys()
+            ->values()
+            ->all();
+
+        PencatatLogAktivitas::catat(
+            $request,
+            'pengguna',
+            'ubah',
+            'Data pengguna diperbarui.',
+            $pengguna,
+            [
+                'kolom_diubah' => $kolomDiubah,
+                'sebelum' => $snapshotSebelum,
+                'sesudah' => $snapshotSesudah,
+            ],
+        );
 
         return redirect()
             ->route('pengaturan.pengguna.index')
@@ -99,6 +139,18 @@ class PenggunaController extends Controller
                 'pengguna' => 'Minimal harus ada satu akun superadmin.',
             ]);
         }
+
+        PencatatLogAktivitas::catat(
+            $request,
+            'pengguna',
+            'hapus',
+            'Pengguna dihapus dari sistem.',
+            $pengguna,
+            [
+                'email' => $pengguna->email,
+                'level_akses' => $pengguna->level_akses?->value,
+            ],
+        );
 
         $pengguna->delete();
 
