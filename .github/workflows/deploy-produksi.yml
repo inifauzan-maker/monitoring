@@ -1,6 +1,9 @@
 name: Deploy Produksi
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       branch:
@@ -21,6 +24,10 @@ concurrency:
   group: deploy-produksi
   cancel-in-progress: false
 
+env:
+  BRANCH_DEPLOY: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.ref_name }}
+  JALANKAN_SEEDER: ${{ github.event_name == 'workflow_dispatch' && inputs.jalankan_seeder || 'false' }}
+
 jobs:
   validasi:
     name: Validasi Build
@@ -30,7 +37,7 @@ jobs:
       - name: Checkout kode
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ env.BRANCH_DEPLOY }}
 
       - name: Siapkan PHP
         uses: shivammathur/setup-php@v2
@@ -72,7 +79,7 @@ jobs:
       - name: Checkout kode
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ env.BRANCH_DEPLOY }}
 
       - name: Konfigurasi SSH
         env:
@@ -93,7 +100,7 @@ jobs:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           ssh -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
-            "cd '$DEPLOY_PATH' && chmod +x skrip/deploy_produksi.sh && ./skrip/deploy_produksi.sh '${{ inputs.branch }}' '${{ inputs.jalankan_seeder }}'"
+            "cd '$DEPLOY_PATH' && chmod +x skrip/deploy_produksi.sh && ./skrip/deploy_produksi.sh '${{ env.BRANCH_DEPLOY }}' '${{ env.JALANKAN_SEEDER }}'"
 
       - name: Verifikasi health check
         env:

@@ -48,6 +48,8 @@ Seeder default membuat akun berikut dengan password `password`:
 
 Panduan deploy lengkap ada di [panduan_deploy.md](panduan_deploy.md).
 
-Deploy manual dari GitHub Actions juga sudah disiapkan lewat workflow:
+Deploy dari GitHub Actions juga sudah disiapkan lewat workflow:
 
 - `.github/workflows/deploy-produksi.yml`
+
+Workflow ini berjalan otomatis saat ada `push` ke `main`, dan juga masih bisa dijalankan manual dari tab `Actions`.

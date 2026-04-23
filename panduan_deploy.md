@@ -231,6 +231,10 @@ Jika repository private, server juga harus bisa menarik source code dari GitHub 
 
 ### Cara menjalankan deploy
 
+Workflow akan berjalan otomatis setiap ada `push` ke branch `main`.
+
+Selain itu, Anda juga tetap bisa menjalankan manual:
+
 1. buka tab `Actions` di GitHub
 2. pilih workflow `Deploy Produksi`
 3. klik `Run workflow`
@@ -240,8 +244,8 @@ Jika repository private, server juga harus bisa menarik source code dari GitHub 
 
 ### Catatan
 
-- Workflow ini sengaja dibuat `manual` dulu lewat `workflow_dispatch`
-- jika nanti Anda ingin auto deploy saat push ke `main`, saya bisa ubah workflow ini
+- Workflow ini sekarang otomatis jalan saat ada `push` ke `main`
+- `workflow_dispatch` tetap dipertahankan agar Anda masih bisa deploy manual saat diperlukan
 - skrip deploy server ada di `skrip/deploy_produksi.sh`
 
 ## 13. Catatan Risiko
