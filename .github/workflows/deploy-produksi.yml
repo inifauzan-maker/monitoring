@@ -96,8 +96,11 @@ jobs:
             "cd '$DEPLOY_PATH' && chmod +x skrip/deploy_produksi.sh && ./skrip/deploy_produksi.sh '${{ inputs.branch }}' '${{ inputs.jalankan_seeder }}'"
 
       - name: Verifikasi health check
-        if: ${{ secrets.DEPLOY_HEALTHCHECK_URL != '' }}
         env:
           DEPLOY_HEALTHCHECK_URL: ${{ secrets.DEPLOY_HEALTHCHECK_URL }}
         run: |
-          curl --fail --silent --show-error "$DEPLOY_HEALTHCHECK_URL"
+          if [ -n "${DEPLOY_HEALTHCHECK_URL:-}" ]; then
+            curl --fail --silent --show-error "$DEPLOY_HEALTHCHECK_URL"
+          else
+            echo "DEPLOY_HEALTHCHECK_URL kosong, verifikasi health check dilewati."
+          fi
