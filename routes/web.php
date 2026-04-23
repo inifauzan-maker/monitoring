@@ -21,6 +21,7 @@ use App\Http\Controllers\Pengaturan\PenggunaController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\ProyekController;
 use App\Http\Controllers\SiswaController;
+use App\Http\Controllers\StatusAplikasiController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -28,6 +29,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/masuk', [SesiController::class, 'store'])->name('sesi.store');
 });
 
+Route::get('/health', [StatusAplikasiController::class, 'show'])->name('health');
 Route::get('/', [LinkPublikController::class, 'root'])->name('dashboard.beranda');
 Route::get('/cta', [LinkPublikController::class, 'domainCta'])->name('publik.domain_link.cta');
 Route::get('/link/{linkPengguna}', [LinkPublikController::class, 'domainBuka'])->name('publik.domain_link.buka');

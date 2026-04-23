@@ -1,0 +1,103 @@
+name: Deploy Produksi
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch yang akan dideploy
+        required: true
+        default: main
+        type: string
+      jalankan_seeder:
+        description: Jalankan db:seed --force setelah migrate
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-produksi
+  cancel-in-progress: false
+
+jobs:
+  validasi:
+    name: Validasi Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Siapkan PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+          extensions: bcmath, ctype, curl, dom, fileinfo, mbstring, openssl, pdo_sqlite, sqlite3, tokenizer, xml
+
+      - name: Siapkan Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependency PHP
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Install dependency frontend
+        run: npm ci
+
+      - name: Siapkan environment test
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Jalankan test
+        run: php artisan test
+
+      - name: Build asset
+        run: npm run build
+
+  deploy:
+    name: Deploy ke Server
+    runs-on: ubuntu-latest
+    needs: validasi
+    environment: production
+
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Konfigurasi SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$DEPLOY_PORT" -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Jalankan deploy di server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd '$DEPLOY_PATH' && chmod +x skrip/deploy_produksi.sh && ./skrip/deploy_produksi.sh '${{ inputs.branch }}' '${{ inputs.jalankan_seeder }}'"
+
+      - name: Verifikasi health check
+        if: ${{ secrets.DEPLOY_HEALTHCHECK_URL != '' }}
+        env:
+          DEPLOY_HEALTHCHECK_URL: ${{ secrets.DEPLOY_HEALTHCHECK_URL }}
+        run: |
+          curl --fail --silent --show-error "$DEPLOY_HEALTHCHECK_URL"
