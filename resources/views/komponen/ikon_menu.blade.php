@@ -123,6 +123,35 @@
         </svg>
         @break
 
+    @case('kuis')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M9 11l3 3l8 -8" />
+            <path d="M20 12v7a1 1 0 0 1 -1 1h-14a1 1 0 0 1 -1 -1v-14a1 1 0 0 1 1 -1h11" />
+            <path d="M8 7h.01" />
+            <path d="M8 11h.01" />
+            <path d="M8 15h.01" />
+        </svg>
+        @break
+
+    @case('bank_soal')
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M9 5h11" />
+            <path d="M9 9h11" />
+            <path d="M9 13h11" />
+            <path d="M9 17h11" />
+            <path d="M5 5h.01" />
+            <path d="M5 9h.01" />
+            <path d="M5 13h.01" />
+            <path d="M5 17h.01" />
+        </svg>
+        @break
+
     @case('daftar_project')
         <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

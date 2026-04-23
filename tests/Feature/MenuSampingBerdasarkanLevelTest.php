@@ -21,11 +21,16 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
 
         $response
             ->assertOk()
+            ->assertSee('data-aksi="ubah-sidebar"', false)
+            ->assertSee('data-submenu-toggle', false)
+            ->assertSee('Notifikasi')
             ->assertSee('LMS')
             ->assertSee('Kursus')
             ->assertSee('Materi')
             ->assertSee('Playlist')
             ->assertSee('Progres Belajar')
+            ->assertSee('Kuis')
+            ->assertSee('Bank Soal')
             ->assertSee('Projects')
             ->assertSee('Daftar Project')
             ->assertSee('Detail Tugas')
@@ -61,11 +66,14 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
 
         $response
             ->assertOk()
+            ->assertSee('Notifikasi')
             ->assertSee('LMS')
             ->assertSee('Kursus')
             ->assertSee('Materi')
             ->assertSee('Playlist')
             ->assertSee('Progres Belajar')
+            ->assertSee('Kuis')
+            ->assertSee('Bank Soal')
             ->assertSee('Projects')
             ->assertSee('Daftar Project')
             ->assertSee('Detail Tugas')
@@ -101,11 +109,14 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
 
         $response
             ->assertOk()
+            ->assertSee('Notifikasi')
             ->assertSee('LMS')
             ->assertSee('Kursus')
             ->assertSee('Materi')
             ->assertSee('Playlist')
             ->assertSee('Progres Belajar')
+            ->assertSee('Kuis')
+            ->assertSee('Bank Soal')
             ->assertSee('Projects')
             ->assertSee('Daftar Project')
             ->assertSee('Detail Tugas')

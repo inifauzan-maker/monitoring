@@ -6,6 +6,7 @@ use App\Enums\LevelAksesPengguna;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\PencatatLogAktivitas;
+use App\Support\PencatatNotifikasi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -51,6 +52,18 @@ class PenggunaController extends Controller
             $penggunaBaru,
             [
                 'email' => $penggunaBaru->email,
+                'level_akses' => $penggunaBaru->level_akses?->value,
+            ],
+        );
+        PencatatNotifikasi::kirim(
+            $penggunaBaru,
+            'Akun Anda sudah dibuat',
+            'Akun baru untuk aplikasi Monitoring telah dibuat. Silakan masuk dan mulai gunakan modul sesuai level akses Anda.',
+            'success',
+            route('dashboard.beranda'),
+            [
+                'modul' => 'pengguna',
+                'user_id' => $penggunaBaru->id,
                 'level_akses' => $penggunaBaru->level_akses?->value,
             ],
         );
@@ -120,6 +133,22 @@ class PenggunaController extends Controller
                 'sesudah' => $snapshotSesudah,
             ],
         );
+        if (! $request->user()?->is($pengguna) && $kolomDiubah !== []) {
+            PencatatNotifikasi::kirim(
+                $pengguna,
+                'Data akun Anda diperbarui',
+                'Admin memperbarui data akun Anda. Kolom yang berubah: '.collect($kolomDiubah)
+                    ->map(fn (string $kolom) => str_replace('_', ' ', $kolom))
+                    ->implode(', ').'.',
+                'warning',
+                route('dashboard.beranda'),
+                [
+                    'modul' => 'pengguna',
+                    'user_id' => $pengguna->id,
+                    'kolom_diubah' => $kolomDiubah,
+                ],
+            );
+        }
 
         return redirect()
             ->route('pengaturan.pengguna.index')

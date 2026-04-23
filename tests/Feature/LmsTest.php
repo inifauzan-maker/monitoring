@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Enums\LevelAksesPengguna;
+use App\Models\Kursus;
+use App\Models\MateriKursus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -11,27 +13,25 @@ class LmsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_pengguna_bisa_membuka_seluruh_halaman_placeholder_lms(): void
+    public function test_pengguna_bisa_membuka_halaman_progres_belajar_lms(): void
     {
         $pengguna = User::factory()->denganLevelAkses(LevelAksesPengguna::LEVEL_5)->create();
+        $kursus = Kursus::factory()->create([
+            'judul' => 'Kursus Monitoring',
+        ]);
+        MateriKursus::factory()->create([
+            'kursus_id' => $kursus->id,
+            'judul' => 'Materi Dasar Monitoring',
+        ]);
 
-        $halaman = [
-            'lms.kursus' => 'Kursus',
-            'lms.materi' => 'Materi',
-            'lms.playlist' => 'Playlist',
-            'lms.progres_belajar' => 'Progres Belajar',
-        ];
+        $response = $this
+            ->actingAs($pengguna)
+            ->get(route('lms.progres_belajar'));
 
-        foreach ($halaman as $route => $judul) {
-            $response = $this
-                ->actingAs($pengguna)
-                ->get(route($route));
-
-            $response
-                ->assertOk()
-                ->assertSee('LMS')
-                ->assertSee($judul)
-                ->assertSee('masih dikosongkan sementara');
-        }
+        $response
+            ->assertOk()
+            ->assertSee('Progres Belajar')
+            ->assertSee('Pantau progres belajar per materi')
+            ->assertSee('Materi Dasar Monitoring');
     }
 }

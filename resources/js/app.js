@@ -2,6 +2,7 @@ import '@tabler/core/dist/js/tabler.esm.js';
 
 const ATTR_TEMA = 'data-bs-theme';
 const KUNCI_TEMA = 'tema_aplikasi';
+const KUNCI_SIDEBAR = 'sidebar_tertutup';
 
 const terapkanTema = (tema) => {
     document.documentElement.setAttribute(ATTR_TEMA, tema);
@@ -127,14 +128,53 @@ const inisialisasiFokusEditorLink = () => {
     }
 };
 
+const terapkanSidebar = (tertutup) => {
+    document.body.classList.toggle('sidebar-collapsed', tertutup);
+    localStorage.setItem(KUNCI_SIDEBAR, tertutup ? '1' : '0');
+
+    document.querySelectorAll('[data-aksi="ubah-sidebar"]').forEach((tombol) => {
+        tombol.setAttribute('aria-label', tertutup ? 'Perluas sidebar' : 'Ciutkan sidebar');
+        tombol.setAttribute('title', tertutup ? 'Perluas sidebar' : 'Ciutkan sidebar');
+        tombol.querySelector('.ikon-sidebar-ciut')?.classList.toggle('d-none', tertutup);
+        tombol.querySelector('.ikon-sidebar-buka')?.classList.toggle('d-none', ! tertutup);
+    });
+};
+
+const inisialisasiSidebarCollapsible = () => {
+    const sidebarTertutup = localStorage.getItem(KUNCI_SIDEBAR) === '1';
+
+    terapkanSidebar(sidebarTertutup);
+
+    document.querySelectorAll('[data-aksi="ubah-sidebar"]').forEach((tombol) => {
+        tombol.addEventListener('click', () => {
+            const statusBerikutnya = ! document.body.classList.contains('sidebar-collapsed');
+
+            terapkanSidebar(statusBerikutnya);
+        });
+    });
+
+    document.addEventListener('click', (event) => {
+        const tombolSubmenu = event.target.closest('[data-submenu-toggle]');
+
+        if (! tombolSubmenu || ! document.body.classList.contains('sidebar-collapsed')) {
+            return;
+        }
+
+        event.preventDefault();
+        terapkanSidebar(false);
+    });
+};
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         inisialisasiTema();
         inisialisasiSalinTeks();
         inisialisasiFokusEditorLink();
+        inisialisasiSidebarCollapsible();
     }, { once: true });
 } else {
     inisialisasiTema();
     inisialisasiSalinTeks();
     inisialisasiFokusEditorLink();
+    inisialisasiSidebarCollapsible();
 }

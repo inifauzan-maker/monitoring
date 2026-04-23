@@ -6,6 +6,7 @@ use App\Models\Proyek;
 use App\Models\TugasProyek;
 use App\Models\User;
 use App\Support\PencatatLogAktivitas;
+use App\Support\PencatatNotifikasi;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -46,6 +47,7 @@ class ProyekController extends Controller
                 'prioritas_project' => $proyek->prioritas_project,
             ],
         );
+        $this->kirimNotifikasiProjectBaru($proyek->fresh(['penanggungJawab']), $request->user());
 
         return redirect()
             ->route('proyek.daftar_project', $this->projectFilterQuery(
@@ -68,6 +70,7 @@ class ProyekController extends Controller
         $data = $this->normalizeProyekPayload($this->validatedProyek($request, $proyek), $proyek);
 
         $proyek->update($data);
+        $proyek->loadMissing('penanggungJawab');
         $snapshotSesudah = [
             'nama_project' => $proyek->nama_project,
             'status_project' => $proyek->status_project,
@@ -90,6 +93,12 @@ class ProyekController extends Controller
                 'sebelum' => $snapshotSebelum,
                 'sesudah' => $snapshotSesudah,
             ],
+        );
+        $this->kirimNotifikasiPerubahanProject(
+            $proyek,
+            $request->user(),
+            $snapshotSebelum,
+            $snapshotSesudah,
         );
 
         return redirect()
@@ -146,6 +155,7 @@ class ProyekController extends Controller
         $data['urutan'] = $data['urutan'] ?? ((TugasProyek::where('proyek_id', $data['proyek_id'])->max('urutan') ?? -1) + 1);
 
         $tugas = TugasProyek::create($data);
+        $tugas->loadMissing(['proyek', 'penanggungJawab']);
         $this->catatHistoriTugas(
             $tugas,
             $request->user(),
@@ -167,6 +177,7 @@ class ProyekController extends Controller
                 'persentase_progres' => $tugas->persentase_progres,
             ],
         );
+        $this->kirimNotifikasiTugasBaru($tugas, $request->user());
 
         return redirect()
             ->route('proyek.detail_tugas', $this->taskFilterQuery(
@@ -183,10 +194,12 @@ class ProyekController extends Controller
 
         $statusSebelum = $tugasProyek->status_tugas;
         $progresSebelum = $tugasProyek->persentase_progres;
+        $penanggungJawabSebelumId = $tugasProyek->penanggung_jawab_id;
         $data = $this->normalizeTugasPayload($this->validatedTugas($request), $tugasProyek);
         $data['urutan'] = $data['urutan'] ?? $tugasProyek->urutan;
 
         $tugasProyek->update($data);
+        $tugasProyek->loadMissing(['proyek', 'penanggungJawab']);
         $this->catatHistoriTugasJikaBerubah(
             $tugasProyek,
             $request->user(),
@@ -209,6 +222,13 @@ class ProyekController extends Controller
                 'progres_sesudah' => $tugasProyek->persentase_progres,
             ],
         );
+        $this->kirimNotifikasiPerubahanTugas(
+            $tugasProyek,
+            $request->user(),
+            $statusSebelum,
+            $progresSebelum,
+            $penanggungJawabSebelumId,
+        );
 
         return redirect()
             ->route('proyek.detail_tugas', $this->taskFilterQuery(
@@ -225,6 +245,7 @@ class ProyekController extends Controller
 
         $statusSebelum = $tugasProyek->status_tugas;
         $progresSebelum = $tugasProyek->persentase_progres;
+        $penanggungJawabSebelumId = $tugasProyek->penanggung_jawab_id;
         $data = $request->validate([
             'status_tugas' => ['required', Rule::in(array_keys(TugasProyek::statusOptions()))],
             'persentase_progres' => ['nullable', 'integer', 'min:0', 'max:100'],
@@ -236,6 +257,7 @@ class ProyekController extends Controller
         $payload = $this->normalizeTugasCepatPayload($data, $tugasProyek);
 
         $tugasProyek->update($payload);
+        $tugasProyek->loadMissing(['proyek', 'penanggungJawab']);
         $this->catatHistoriTugasJikaBerubah(
             $tugasProyek,
             $request->user(),
@@ -257,6 +279,13 @@ class ProyekController extends Controller
                 'progres_sebelum' => $progresSebelum,
                 'progres_sesudah' => $tugasProyek->persentase_progres,
             ],
+        );
+        $this->kirimNotifikasiPerubahanTugas(
+            $tugasProyek,
+            $request->user(),
+            $statusSebelum,
+            $progresSebelum,
+            $penanggungJawabSebelumId,
         );
 
         return redirect()
@@ -753,5 +782,141 @@ class ProyekController extends Controller
     private function authorizeSuperadmin(Request $request): void
     {
         abort_unless($request->user()?->adalahSuperadmin(), 403, 'Akses ditolak.');
+    }
+
+    private function kirimNotifikasiProjectBaru(Proyek $proyek, ?User $aktor): void
+    {
+        $penerima = $proyek->penanggungJawab;
+
+        if (! $penerima || ($aktor && $aktor->is($penerima))) {
+            return;
+        }
+
+        PencatatNotifikasi::kirim(
+            $penerima,
+            'Anda ditunjuk sebagai PIC project',
+            'Project "'.$proyek->nama_project.'" sekarang menjadi tanggung jawab Anda.',
+            'info',
+            route('proyek.daftar_project', ['penanggung_jawab_id' => $penerima->id]),
+            [
+                'modul' => 'proyek',
+                'proyek_id' => $proyek->id,
+                'kode_project' => $proyek->kode_project,
+            ],
+        );
+    }
+
+    private function kirimNotifikasiPerubahanProject(
+        Proyek $proyek,
+        ?User $aktor,
+        array $snapshotSebelum,
+        array $snapshotSesudah,
+    ): void {
+        $penerima = $proyek->penanggungJawab;
+
+        if (! $penerima || ($aktor && $aktor->is($penerima))) {
+            return;
+        }
+
+        $pesan = collect();
+
+        if (($snapshotSebelum['penanggung_jawab_id'] ?? null) !== ($snapshotSesudah['penanggung_jawab_id'] ?? null)) {
+            $pesan->push('Anda sekarang menjadi PIC untuk project "'.$proyek->nama_project.'".');
+        }
+
+        if (($snapshotSebelum['status_project'] ?? null) !== ($snapshotSesudah['status_project'] ?? null)) {
+            $pesan->push(
+                'Status project diperbarui menjadi '.$proyek->labelStatusProject().'.'
+            );
+        }
+
+        if ($pesan->isEmpty()) {
+            return;
+        }
+
+        PencatatNotifikasi::kirim(
+            $penerima,
+            'Perubahan project',
+            $pesan->implode(' '),
+            'info',
+            route('proyek.daftar_project', ['penanggung_jawab_id' => $penerima->id]),
+            [
+                'modul' => 'proyek',
+                'proyek_id' => $proyek->id,
+                'sebelum' => $snapshotSebelum,
+                'sesudah' => $snapshotSesudah,
+            ],
+        );
+    }
+
+    private function kirimNotifikasiTugasBaru(TugasProyek $tugasProyek, ?User $aktor): void
+    {
+        $penerima = $tugasProyek->penanggungJawab;
+
+        if (! $penerima || ($aktor && $aktor->is($penerima))) {
+            return;
+        }
+
+        PencatatNotifikasi::kirim(
+            $penerima,
+            'Tugas baru untuk Anda',
+            'Tugas "'.$tugasProyek->judul_tugas.'" pada project "'.$tugasProyek->proyek?->nama_project.'" telah ditugaskan kepada Anda.',
+            'info',
+            route('proyek.tugas.histori', $tugasProyek),
+            [
+                'modul' => 'tugas_proyek',
+                'tugas_proyek_id' => $tugasProyek->id,
+                'proyek_id' => $tugasProyek->proyek_id,
+            ],
+        );
+    }
+
+    private function kirimNotifikasiPerubahanTugas(
+        TugasProyek $tugasProyek,
+        ?User $aktor,
+        ?string $statusSebelum,
+        ?int $progresSebelum,
+        ?int $penanggungJawabSebelumId,
+    ): void {
+        $penerima = $tugasProyek->penanggungJawab;
+
+        if (! $penerima || ($aktor && $aktor->is($penerima))) {
+            return;
+        }
+
+        $pesan = collect();
+
+        if ($penanggungJawabSebelumId !== $tugasProyek->penanggung_jawab_id) {
+            $pesan->push('Anda sekarang ditunjuk menangani tugas ini.');
+        }
+
+        if ($statusSebelum !== $tugasProyek->status_tugas) {
+            $pesan->push('Status tugas diperbarui menjadi '.$tugasProyek->labelStatusTugas().'.');
+        }
+
+        if ((int) $progresSebelum !== (int) $tugasProyek->persentase_progres) {
+            $pesan->push('Progres tugas saat ini '.$tugasProyek->persentase_progres.'%.');
+        }
+
+        if ($pesan->isEmpty()) {
+            return;
+        }
+
+        PencatatNotifikasi::kirim(
+            $penerima,
+            'Pembaruan tugas project',
+            'Tugas "'.$tugasProyek->judul_tugas.'" pada project "'.$tugasProyek->proyek?->nama_project.'". '.$pesan->implode(' '),
+            $tugasProyek->status_tugas === 'tertunda' ? 'warning' : 'info',
+            route('proyek.tugas.histori', $tugasProyek),
+            [
+                'modul' => 'tugas_proyek',
+                'tugas_proyek_id' => $tugasProyek->id,
+                'proyek_id' => $tugasProyek->proyek_id,
+                'status_sebelum' => $statusSebelum,
+                'status_sesudah' => $tugasProyek->status_tugas,
+                'progres_sebelum' => $progresSebelum,
+                'progres_sesudah' => $tugasProyek->persentase_progres,
+            ],
+        );
     }
 }

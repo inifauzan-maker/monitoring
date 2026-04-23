@@ -15,6 +15,12 @@ class LogAktivitas extends Model
         'tugas_proyek' => 'Tugas Project',
         'omzet' => 'Omzet',
         'artikel' => 'Artikel',
+        'kursus' => 'Kursus',
+        'materi' => 'Materi',
+        'playlist' => 'Playlist',
+        'progres_belajar' => 'Progres Belajar',
+        'kuis' => 'Kuis',
+        'bank_soal' => 'Bank Soal',
         'produk' => 'Produk',
         'siswa' => 'Siswa',
         'lead' => 'Leads',
@@ -30,8 +36,10 @@ class LogAktivitas extends Model
         'hapus' => 'Hapus',
         'status_cepat' => 'Status Cepat',
         'tindak_lanjut' => 'Tindak Lanjut',
+        'impor' => 'Impor',
         'lihat' => 'Lihat',
         'ekspor' => 'Ekspor',
+        'submit' => 'Submit',
     ];
 
     protected $table = 'log_aktivitas';
@@ -89,6 +97,8 @@ class LogAktivitas extends Model
             'hapus' => 'bg-red-lt text-red',
             'lihat' => 'bg-blue-lt text-blue',
             'ekspor' => 'bg-indigo-lt text-indigo',
+            'impor' => 'bg-green-lt text-green',
+            'submit' => 'bg-green-lt text-green',
             'ubah', 'status_cepat', 'tindak_lanjut' => 'bg-yellow-lt text-yellow',
             default => 'bg-secondary-lt text-secondary',
         };

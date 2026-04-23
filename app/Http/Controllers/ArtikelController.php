@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\LevelAksesPengguna;
 use Carbon\Carbon;
 use App\Models\Artikel;
 use App\Models\ArtikelRevisi;
@@ -9,6 +10,7 @@ use App\Models\KategoriArtikel;
 use App\Models\PresetEditorialPengguna;
 use App\Models\User;
 use App\Support\PencatatLogAktivitas;
+use App\Support\PencatatNotifikasi;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -432,6 +434,7 @@ class ArtikelController extends Controller
                 'mode_publikasi' => $artikel->sedangTerjadwal() ? 'terjadwal' : 'diterbitkan',
             ]
         );
+        $this->kirimNotifikasiPublikasiArtikel($artikel->loadMissing('penulis'), $request->user());
 
         return redirect()
             ->route('tools.artikel.edit', $artikel)
@@ -461,6 +464,7 @@ class ArtikelController extends Controller
                 'sesudah' => $this->ringkasanAuditArtikel($artikel),
             ]
         );
+        $this->kirimNotifikasiArtikelDikembalikanKeDraft($artikel->loadMissing('penulis'), $request->user());
 
         return redirect()
             ->route('tools.artikel.edit', $artikel)
@@ -1121,6 +1125,60 @@ class ArtikelController extends Controller
             'tanggal_dari' => $request->query('tanggal_dari'),
             'tanggal_sampai' => $request->query('tanggal_sampai'),
         ], fn ($nilai) => filled($nilai));
+    }
+
+    private function kirimNotifikasiPublikasiArtikel(Artikel $artikel, ?User $aktor): void
+    {
+        $penerima = User::query()
+            ->where('level_akses', LevelAksesPengguna::SUPERADMIN->value)
+            ->when($aktor, fn (Builder $builder) => $builder->whereKeyNot($aktor->id))
+            ->get();
+
+        if ($penerima->isEmpty()) {
+            return;
+        }
+
+        $terjadwal = $artikel->sedangTerjadwal();
+
+        PencatatNotifikasi::kirim(
+            $penerima,
+            $terjadwal ? 'Artikel dijadwalkan terbit' : 'Artikel diterbitkan',
+            $terjadwal
+                ? 'Artikel "'.$artikel->judul.'" dari '.$artikel->penulis?->name.' dijadwalkan terbit pada '.$artikel->diterbitkan_pada?->translatedFormat('d M Y H:i').'.'
+                : 'Artikel "'.$artikel->judul.'" dari '.$artikel->penulis?->name.' sudah diterbitkan dan siap dibaca.',
+            $terjadwal ? 'warning' : 'success',
+            route('tools.artikel.edit', $artikel),
+            [
+                'modul' => 'artikel',
+                'artikel_id' => $artikel->id,
+                'status_publikasi' => $artikel->labelStatusPublikasi(),
+            ],
+        );
+    }
+
+    private function kirimNotifikasiArtikelDikembalikanKeDraft(Artikel $artikel, ?User $aktor): void
+    {
+        $penerima = User::query()
+            ->where('level_akses', LevelAksesPengguna::SUPERADMIN->value)
+            ->when($aktor, fn (Builder $builder) => $builder->whereKeyNot($aktor->id))
+            ->get();
+
+        if ($penerima->isEmpty()) {
+            return;
+        }
+
+        PencatatNotifikasi::kirim(
+            $penerima,
+            'Artikel dikembalikan ke draft',
+            'Artikel "'.$artikel->judul.'" dari '.$artikel->penulis?->name.' dikembalikan ke status draft dan membutuhkan tindak lanjut editorial.',
+            'warning',
+            route('tools.artikel.edit', $artikel),
+            [
+                'modul' => 'artikel',
+                'artikel_id' => $artikel->id,
+                'status_publikasi' => $artikel->labelStatusPublikasi(),
+            ],
+        );
     }
 
     private function ringkasanAuditArtikel(Artikel $artikel): array

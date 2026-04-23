@@ -9,7 +9,13 @@ use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LinkAnalitikExportController;
 use App\Http\Controllers\LinkController;
 use App\Http\Controllers\LinkPublikController;
-use App\Http\Controllers\LmsController;
+use App\Http\Controllers\Lms\BankSoalController;
+use App\Http\Controllers\Lms\KursusController;
+use App\Http\Controllers\Lms\KuisController;
+use App\Http\Controllers\Lms\MateriController;
+use App\Http\Controllers\Lms\PlaylistController;
+use App\Http\Controllers\Lms\ProgresBelajarController;
+use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\OmzetController;
 use App\Http\Controllers\Pengaturan\PenggunaController;
 use App\Http\Controllers\ProdukController;
@@ -30,6 +36,9 @@ Route::get('/u/{pengguna:slug_link}/cta', [LinkPublikController::class, 'cta'])-
 Route::get('/u/{pengguna:slug_link}/link/{linkPengguna}', [LinkPublikController::class, 'buka'])->name('publik.link.buka');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
+    Route::patch('/notifikasi/baca-semua', [NotifikasiController::class, 'bacaSemua'])->name('notifikasi.baca_semua');
+    Route::patch('/notifikasi/{notifikasiPengguna}/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca');
     Route::get('/omzet', [OmzetController::class, 'index'])->name('omzet.index');
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
     Route::get('/leads', [LeadController::class, 'index'])->name('leads.index');
@@ -37,10 +46,42 @@ Route::middleware('auth')->group(function () {
     Route::prefix('lms')
         ->name('lms.')
         ->group(function () {
-            Route::get('/kursus', [LmsController::class, 'kursus'])->name('kursus');
-            Route::get('/materi', [LmsController::class, 'materi'])->name('materi');
-            Route::get('/playlist', [LmsController::class, 'playlist'])->name('playlist');
-            Route::get('/progres-belajar', [LmsController::class, 'progresBelajar'])->name('progres_belajar');
+            Route::get('/kursus', [KursusController::class, 'index'])->name('kursus');
+            Route::get('/bank-soal', [BankSoalController::class, 'index'])->name('bank_soal');
+            Route::get('/kuis', [KuisController::class, 'index'])->name('kuis');
+            Route::get('/kuis/{kuisLms}', [KuisController::class, 'show'])->name('kuis.show');
+            Route::post('/kuis/{kuisLms}/submit', [KuisController::class, 'submit'])->name('kuis.submit');
+            Route::post('/kuis/{kuisLms}/mulai-ulang', [KuisController::class, 'restart'])->name('kuis.restart');
+            Route::get('/materi', [MateriController::class, 'index'])->name('materi');
+            Route::get('/materi/{materiKursus}', [MateriController::class, 'show'])->name('materi.show');
+            Route::post('/materi/{materiKursus}/progres', [ProgresBelajarController::class, 'sinkronOtomatis'])->name('materi.progres');
+            Route::get('/playlist', [PlaylistController::class, 'index'])->name('playlist');
+            Route::get('/progres-belajar', [ProgresBelajarController::class, 'index'])->name('progres_belajar');
+            Route::post('/progres-belajar', [ProgresBelajarController::class, 'store'])->name('progres_belajar.store');
+            Route::middleware('level_akses:superadmin')->group(function () {
+                Route::post('/kursus', [KursusController::class, 'store'])->name('kursus.store');
+                Route::get('/kursus/{kursus}/ubah', [KursusController::class, 'edit'])->name('kursus.edit');
+                Route::put('/kursus/{kursus}', [KursusController::class, 'update'])->name('kursus.update');
+                Route::delete('/kursus/{kursus}', [KursusController::class, 'destroy'])->name('kursus.destroy');
+                Route::post('/bank-soal', [BankSoalController::class, 'store'])->name('bank_soal.store');
+                Route::get('/bank-soal/{bankSoalLms}/ubah', [BankSoalController::class, 'edit'])->name('bank_soal.edit');
+                Route::put('/bank-soal/{bankSoalLms}', [BankSoalController::class, 'update'])->name('bank_soal.update');
+                Route::delete('/bank-soal/{bankSoalLms}', [BankSoalController::class, 'destroy'])->name('bank_soal.destroy');
+                Route::post('/kuis', [KuisController::class, 'store'])->name('kuis.store');
+                Route::get('/kuis/{kuisLms}/ubah', [KuisController::class, 'edit'])->name('kuis.edit');
+                Route::put('/kuis/{kuisLms}', [KuisController::class, 'update'])->name('kuis.update');
+                Route::delete('/kuis/{kuisLms}', [KuisController::class, 'destroy'])->name('kuis.destroy');
+                Route::post('/kuis/{kuisLms}/bank-soal', [KuisController::class, 'storeBankSoal'])->name('kuis.bank_soal.store');
+                Route::delete('/kuis/{kuisLms}/bank-soal/{bankSoalLms}', [KuisController::class, 'destroyBankSoal'])->name('kuis.bank_soal.destroy');
+                Route::post('/kuis/{kuisLms}/pertanyaan', [KuisController::class, 'storePertanyaan'])->name('kuis.pertanyaan.store');
+                Route::put('/kuis/{kuisLms}/pertanyaan/{pertanyaanKuis}', [KuisController::class, 'updatePertanyaan'])->name('kuis.pertanyaan.update');
+                Route::delete('/kuis/{kuisLms}/pertanyaan/{pertanyaanKuis}', [KuisController::class, 'destroyPertanyaan'])->name('kuis.pertanyaan.destroy');
+                Route::post('/materi', [MateriController::class, 'store'])->name('materi.store');
+                Route::get('/materi/{materiKursus}/ubah', [MateriController::class, 'edit'])->name('materi.edit');
+                Route::put('/materi/{materiKursus}', [MateriController::class, 'update'])->name('materi.update');
+                Route::delete('/materi/{materiKursus}', [MateriController::class, 'destroy'])->name('materi.destroy');
+                Route::post('/playlist', [PlaylistController::class, 'store'])->name('playlist.store');
+            });
         });
     Route::prefix('proyek')
         ->name('proyek.')

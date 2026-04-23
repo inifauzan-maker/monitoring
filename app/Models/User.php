@@ -106,6 +106,26 @@ class User extends Authenticatable
         return $this->hasMany(LogAktivitas::class, 'user_id');
     }
 
+    public function notifikasiPengguna(): HasMany
+    {
+        return $this->hasMany(NotifikasiPengguna::class, 'user_id')->latest();
+    }
+
+    public function progresBelajarMateri(): HasMany
+    {
+        return $this->hasMany(ProgresBelajarMateri::class, 'user_id');
+    }
+
+    public function hasilKuisPengguna(): HasMany
+    {
+        return $this->hasMany(HasilKuisPengguna::class, 'user_id');
+    }
+
+    public function percobaanKuisPengguna(): HasMany
+    {
+        return $this->hasMany(PercobaanKuisPengguna::class, 'user_id')->latest('percobaan_ke');
+    }
+
     public function proyekDibuat(): HasMany
     {
         return $this->hasMany(Proyek::class, 'dibuat_oleh');

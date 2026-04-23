@@ -20,7 +20,11 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body>
-        @php($penggunaMasuk = auth()->user())
+        @php
+            $penggunaMasuk = auth()->user();
+            $notifikasiRingkas = $penggunaMasuk?->notifikasiPengguna()->latest()->limit(5)->get() ?? collect();
+            $jumlahNotifikasiBelumDibaca = $penggunaMasuk?->notifikasiPengguna()->whereNull('dibaca_pada')->count() ?? 0;
+        @endphp
 
         <div class="page">
             @include('komponen.menu_samping')
@@ -29,6 +33,108 @@
                 <header class="navbar navbar-expand-md d-none d-lg-flex d-print-none">
                     <div class="container-xl">
                         <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+                            <div class="nav-item dropdown">
+                                <a href="#" class="nav-link px-2 position-relative" data-bs-toggle="dropdown"
+                                    aria-label="Lihat notifikasi" title="Lihat notifikasi">
+                                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M10 5a2 2 0 1 1 4 0v.01" />
+                                        <path d="M12 21a2 2 0 0 0 2 -2h-4a2 2 0 0 0 2 2z" />
+                                        <path d="M5 17h14" />
+                                        <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9h-18s3 -2 3 -9" />
+                                    </svg>
+                                    @if ($jumlahNotifikasiBelumDibaca > 0)
+                                        <span class="badge bg-red badge-notifikasi">
+                                            {{ $jumlahNotifikasiBelumDibaca > 9 ? '9+' : $jumlahNotifikasiBelumDibaca }}
+                                        </span>
+                                    @endif
+                                </a>
+
+                                <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow dropdown-notifikasi p-0">
+                                    <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
+                                        <div>
+                                            <div class="fw-semibold">Notifikasi</div>
+                                            <div class="small text-secondary">
+                                                {{ $jumlahNotifikasiBelumDibaca }} belum dibaca
+                                            </div>
+                                        </div>
+                                        <a href="{{ route('notifikasi.index') }}" class="small fw-semibold text-decoration-none">
+                                            Lihat Semua
+                                        </a>
+                                    </div>
+
+                                    @if ($notifikasiRingkas->isEmpty())
+                                        <div class="px-3 py-4 text-center text-secondary small">
+                                            Belum ada notifikasi baru.
+                                        </div>
+                                    @else
+                                        <div class="list-group list-group-flush">
+                                            @foreach ($notifikasiRingkas as $notifikasi)
+                                                <div class="list-group-item px-3 py-3 {{ $notifikasi->sudahDibaca() ? '' : 'notifikasi-item-belum' }}">
+                                                    <div class="d-flex gap-3">
+                                                        <div class="flex-shrink-0 pt-1">
+                                                            @include('komponen.ikon_notifikasi', [
+                                                                'tipe' => $notifikasi->tipe,
+                                                                'kelas' => $notifikasi->kelasIkonTipe(),
+                                                            ])
+                                                        </div>
+                                                        <div class="flex-grow-1 min-w-0">
+                                                            <div class="d-flex align-items-start justify-content-between gap-2">
+                                                                <div class="fw-semibold text-body">{{ $notifikasi->judul }}</div>
+                                                                @unless ($notifikasi->sudahDibaca())
+                                                                    <span class="indikator-belum-dibaca"></span>
+                                                                @endunless
+                                                            </div>
+                                                            <div class="small text-secondary mt-1">
+                                                                {{ \Illuminate\Support\Str::limit($notifikasi->pesan, 96) }}
+                                                            </div>
+                                                            <div class="small text-secondary mt-2">
+                                                                {{ $notifikasi->created_at?->diffForHumans() }}
+                                                            </div>
+                                                            <div class="d-flex flex-wrap gap-2 mt-3">
+                                                                @unless ($notifikasi->sudahDibaca())
+                                                                    <form action="{{ route('notifikasi.baca', $notifikasi) }}" method="POST">
+                                                                        @csrf
+                                                                        @method('PATCH')
+                                                                        <input type="hidden" name="redirect_ke" value="{{ $notifikasi->tautan ?: route('notifikasi.index') }}">
+                                                                        <button type="submit" class="btn btn-sm btn-primary">
+                                                                            {{ $notifikasi->tautan ? 'Buka' : 'Tandai Dibaca' }}
+                                                                        </button>
+                                                                    </form>
+                                                                @endunless
+
+                                                                @if ($notifikasi->tautan)
+                                                                    <a href="{{ $notifikasi->tautan }}" class="btn btn-sm btn-outline-secondary">
+                                                                        Tujuan
+                                                                    </a>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    <div class="d-flex justify-content-between align-items-center gap-2 px-3 py-2 border-top">
+                                        <form action="{{ route('notifikasi.baca_semua') }}" method="POST">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="redirect_ke" value="{{ route('notifikasi.index') }}">
+                                            <button type="submit" class="btn btn-sm btn-ghost-secondary">
+                                                Baca Semua
+                                            </button>
+                                        </form>
+
+                                        <a href="{{ route('notifikasi.index') }}" class="btn btn-sm btn-outline-primary">
+                                            Buka Halaman
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
                             <button
                                 class="btn btn-icon btn-ghost-secondary"
                                 type="button"
