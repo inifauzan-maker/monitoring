@@ -104,53 +104,6 @@ return [
         ],
     ],
     [
-        'bagian' => 'LMS',
-        'items' => [
-            [
-                'judul' => 'Kursus',
-                'ikon' => 'kursus',
-                'route' => 'lms.kursus',
-                'aktif' => ['lms.kursus', 'lms.kursus.*'],
-                'level_minimal' => 'level_5',
-            ],
-            [
-                'judul' => 'Materi',
-                'ikon' => 'materi',
-                'route' => 'lms.materi',
-                'aktif' => ['lms.materi', 'lms.materi.*'],
-                'level_minimal' => 'level_5',
-            ],
-            [
-                'judul' => 'Playlist',
-                'ikon' => 'playlist',
-                'route' => 'lms.playlist',
-                'aktif' => ['lms.playlist'],
-                'level_minimal' => 'level_5',
-            ],
-            [
-                'judul' => 'Progres Belajar',
-                'ikon' => 'progres_belajar',
-                'route' => 'lms.progres_belajar',
-                'aktif' => ['lms.progres_belajar'],
-                'level_minimal' => 'level_5',
-            ],
-            [
-                'judul' => 'Kuis',
-                'ikon' => 'kuis',
-                'route' => 'lms.kuis',
-                'aktif' => ['lms.kuis', 'lms.kuis.*'],
-                'level_minimal' => 'level_5',
-            ],
-            [
-                'judul' => 'Bank Soal',
-                'ikon' => 'bank_soal',
-                'route' => 'lms.bank_soal',
-                'aktif' => ['lms.bank_soal', 'lms.bank_soal.*'],
-                'level_minimal' => 'level_5',
-            ],
-        ],
-    ],
-    [
         'bagian' => 'Projects',
         'items' => [
             [
@@ -200,6 +153,53 @@ return [
                 'ikon' => 'pelaporan',
                 'route' => 'proyek.pelaporan',
                 'aktif' => ['proyek.pelaporan'],
+                'level_minimal' => 'level_5',
+            ],
+        ],
+    ],
+    [
+        'bagian' => 'LMS',
+        'items' => [
+            [
+                'judul' => 'Kursus',
+                'ikon' => 'kursus',
+                'route' => 'lms.kursus',
+                'aktif' => ['lms.kursus', 'lms.kursus.*'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Materi',
+                'ikon' => 'materi',
+                'route' => 'lms.materi',
+                'aktif' => ['lms.materi', 'lms.materi.*'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Playlist',
+                'ikon' => 'playlist',
+                'route' => 'lms.playlist',
+                'aktif' => ['lms.playlist'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Progres Belajar',
+                'ikon' => 'progres_belajar',
+                'route' => 'lms.progres_belajar',
+                'aktif' => ['lms.progres_belajar'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Kuis',
+                'ikon' => 'kuis',
+                'route' => 'lms.kuis',
+                'aktif' => ['lms.kuis', 'lms.kuis.*'],
+                'level_minimal' => 'level_5',
+            ],
+            [
+                'judul' => 'Bank Soal',
+                'ikon' => 'bank_soal',
+                'route' => 'lms.bank_soal',
+                'aktif' => ['lms.bank_soal', 'lms.bank_soal.*'],
                 'level_minimal' => 'level_5',
             ],
         ],

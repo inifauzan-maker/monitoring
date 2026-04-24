@@ -53,3 +53,5 @@ Deploy dari GitHub Actions juga sudah disiapkan lewat workflow:
 - `.github/workflows/deploy-produksi.yml`
 
 Workflow ini berjalan otomatis saat ada `push` ke `main`, dan juga masih bisa dijalankan manual dari tab `Actions`.
+
+Untuk shared hosting yang memakai `public_html`, aplikasi ini juga mendukung `APP_PUBLIC_PATH=public_html` agar source Laravel tetap aman di root/domain path tetapi folder publik mengikuti struktur hosting.

@@ -24,6 +24,7 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
             ->assertSee('data-aksi="ubah-sidebar"', false)
             ->assertSee('data-submenu-toggle', false)
             ->assertSee('Notifikasi')
+            ->assertSeeInOrder(['Projects', 'LMS', 'Tools', 'Administrasi'])
             ->assertSee('LMS')
             ->assertSee('Kursus')
             ->assertSee('Materi')
@@ -68,6 +69,7 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
         $response
             ->assertOk()
             ->assertSee('Notifikasi')
+            ->assertSeeInOrder(['Projects', 'LMS', 'Tools'])
             ->assertSee('LMS')
             ->assertSee('Kursus')
             ->assertSee('Materi')
@@ -112,6 +114,7 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
         $response
             ->assertOk()
             ->assertSee('Notifikasi')
+            ->assertSeeInOrder(['Projects', 'LMS', 'Tools'])
             ->assertSee('LMS')
             ->assertSee('Kursus')
             ->assertSee('Materi')

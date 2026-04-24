@@ -46,6 +46,7 @@ cp .env.produksi.example .env
 Lalu isi minimal:
 
 - `APP_URL`
+- `APP_PUBLIC_PATH` jika deploy di shared hosting yang memakai `public_html`
 - `APP_KEY` nanti dibuat dengan artisan
 - `DB_HOST`
 - `DB_PORT`
@@ -60,6 +61,7 @@ Catatan:
 - App ini memakai `SESSION_DRIVER=database`
 - Cache default juga `database`
 - Queue default `database`
+- Untuk shared hosting seperti Hostinger/cPanel, isi `APP_PUBLIC_PATH=public_html` bila source Laravel dipasang di root domain dan web root tetap mengarah ke folder `public_html`
 
 Jadi migration wajib dijalankan agar tabel pendukung tersedia.
 
@@ -152,7 +154,24 @@ Sesuaikan:
 - versi socket PHP-FPM
 - path project
 
-## 10. Verifikasi Setelah Deploy
+## 10. Catatan Shared Hosting
+
+Jika struktur hosting Anda seperti ini:
+
+- `~/domains/simarketing.sivmi.id`
+- `~/domains/simarketing.sivmi.id/public_html`
+
+dan Anda ingin source Laravel dipasang langsung di root domain, maka:
+
+1. clone source ke `~/domains/simarketing.sivmi.id`
+2. isi `.env` di root itu juga
+3. set `APP_PUBLIC_PATH=public_html`
+4. salin isi folder `public/` Laravel ke `public_html/`
+5. file `public_html/index.php` bisa tetap memakai pola default Laravel karena `vendor` dan `bootstrap` berada satu level di atasnya
+
+Dengan pendekatan ini, perintah seperti `php artisan storage:link` akan mengarah ke `public_html/storage`, bukan ke folder `public/storage` bawaan Laravel.
+
+## 11. Verifikasi Setelah Deploy
 
 Periksa hal berikut:
 
@@ -164,7 +183,7 @@ Periksa hal berikut:
 4. Pastikan asset CSS/JS termuat normal.
 5. Coba buka modul utama seperti `Produk`, `Projects`, `LMS`, dan `Notifikasi`.
 
-## 11. Checklist Update Rilis Berikutnya
+## 12. Checklist Update Rilis Berikutnya
 
 Saat ada update code:
 
@@ -180,7 +199,7 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-## 12. Deploy dari GitHub Actions
+## 13. Deploy dari GitHub Actions
 
 Repository ini sudah disiapkan untuk deploy manual dari GitHub Actions melalui workflow:
 
@@ -194,7 +213,8 @@ Workflow ini:
 4. build asset
 5. SSH ke server
 6. menjalankan skrip `skrip/deploy_produksi.sh`
-7. opsional mengecek endpoint `/health`
+7. mengirim hasil `public/build` ke public path server
+8. opsional mengecek endpoint `/health`
 
 ### Secret GitHub yang perlu diisi
 
@@ -227,6 +247,12 @@ php artisan key:generate
 
 Lalu isi `.env` sesuai server produksi.
 
+Catatan:
+
+- Untuk alur deploy GitHub Actions terbaru, server tidak wajib punya `npm`
+- Asset frontend dibuild di GitHub Actions lalu dikirim ke server setelah deploy
+- Jika memakai shared hosting dengan `public_html`, isi `APP_PUBLIC_PATH=public_html` di `.env`
+
 Jika repository private, server juga harus bisa menarik source code dari GitHub saat `git pull` dijalankan. Biasanya dengan deploy key atau PAT yang sudah terpasang di server.
 
 ### Cara menjalankan deploy
@@ -248,7 +274,7 @@ Selain itu, Anda juga tetap bisa menjalankan manual:
 - `workflow_dispatch` tetap dipertahankan agar Anda masih bisa deploy manual saat diperlukan
 - skrip deploy server ada di `skrip/deploy_produksi.sh`
 
-## 13. Catatan Risiko
+## 14. Catatan Risiko
 
 - Jika `SESSION_DRIVER=database` tetapi migration belum dijalankan, login akan gagal.
 - Jika MySQL mati, aplikasi akan ikut gagal karena session, cache, dan sebagian modul memakai database.

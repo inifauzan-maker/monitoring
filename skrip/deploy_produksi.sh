@@ -18,7 +18,10 @@ if [[ ! -d ".git" ]]; then
     exit 1
 fi
 
-for perintah in git php composer npm; do
+PUBLIC_PATH="$(grep -E '^APP_PUBLIC_PATH=' .env | tail -n1 | cut -d= -f2- | tr -d '\r"' || true)"
+PUBLIC_PATH="${PUBLIC_PATH:-public}"
+
+for perintah in git php composer; do
     if ! command -v "${perintah}" >/dev/null 2>&1; then
         echo "Perintah ${perintah} tidak ditemukan di server."
         exit 1
@@ -33,11 +36,9 @@ git pull --ff-only origin "${BRANCH}"
 echo "==> Install dependency PHP"
 composer install --no-dev --optimize-autoloader --no-interaction
 
-echo "==> Install dependency frontend"
-npm ci
-
-echo "==> Build asset produksi"
-npm run build
+echo "==> Sinkronisasi file publik ke ${PUBLIC_PATH}"
+mkdir -p "${PUBLIC_PATH}"
+cp -a public/. "${PUBLIC_PATH}/"
 
 echo "==> Menjalankan migration"
 php artisan migrate --force
