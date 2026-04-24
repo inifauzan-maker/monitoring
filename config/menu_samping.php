@@ -227,6 +227,13 @@ return [
         'bagian' => 'Administrasi',
         'items' => [
             [
+                'judul' => 'Pemetaan Beranda',
+                'ikon' => 'pemetaan_beranda',
+                'route' => 'administrasi.pemetaan_beranda.index',
+                'aktif' => ['administrasi.pemetaan_beranda.*'],
+                'level_minimal' => 'superadmin',
+            ],
+            [
                 'judul' => 'Log Aktivitas',
                 'ikon' => 'log_aktivitas',
                 'route' => 'administrasi.log_aktivitas.index',

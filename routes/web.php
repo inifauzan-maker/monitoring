@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Autentikasi\SesiController;
 use App\Http\Controllers\Administrasi\LogAktivitasController;
+use App\Http\Controllers\Administrasi\PemetaanBerandaController;
 use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\KampanyeController;
 use App\Http\Controllers\KategoriArtikelController;
@@ -167,6 +168,13 @@ Route::middleware('auth')->group(function () {
         });
 
     Route::middleware('level_akses:superadmin')->group(function () {
+        Route::prefix('administrasi/pemetaan-beranda')
+            ->name('administrasi.pemetaan_beranda.')
+            ->group(function () {
+                Route::get('/', [PemetaanBerandaController::class, 'index'])->name('index');
+                Route::put('/', [PemetaanBerandaController::class, 'update'])->name('update');
+            });
+
         Route::prefix('administrasi/log-aktivitas')
             ->name('administrasi.log_aktivitas.')
             ->group(function () {

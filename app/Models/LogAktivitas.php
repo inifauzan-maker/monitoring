@@ -21,6 +21,7 @@ class LogAktivitas extends Model
         'progres_belajar' => 'Progres Belajar',
         'kuis' => 'Kuis',
         'bank_soal' => 'Bank Soal',
+        'pemetaan_beranda' => 'Pemetaan Beranda',
         'produk' => 'Produk',
         'siswa' => 'Siswa',
         'lead' => 'Leads',

@@ -39,6 +39,7 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
             ->assertSee('Progres')
             ->assertSee('Evaluasi')
             ->assertSee('Pelaporan')
+            ->assertSee('Pemetaan Beranda')
             ->assertSee('Log Aktivitas')
             ->assertSee('Pengguna (RBAC)')
             ->assertSee('Artikel')
@@ -95,6 +96,7 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
             ->assertSee('Youtube')
             ->assertSee('Event')
             ->assertSee('Buzzer')
+            ->assertDontSee('Pemetaan Beranda')
             ->assertDontSee('Log Aktivitas')
             ->assertDontSee('Pengguna (RBAC)');
     }
@@ -138,6 +140,7 @@ class MenuSampingBerdasarkanLevelTest extends TestCase
             ->assertSee('Youtube')
             ->assertSee('Event')
             ->assertSee('Buzzer')
+            ->assertDontSee('Pemetaan Beranda')
             ->assertDontSee('Log Aktivitas')
             ->assertDontSee('Pengguna (RBAC)');
     }
