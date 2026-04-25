@@ -68,7 +68,7 @@
 
                         <div class="col-md-6 d-flex align-items-end">
                             <div class="alert alert-secondary mb-0 w-100">
-                                Superadmin memiliki akses penuh. Level 1 sampai 5 bisa dipakai untuk pembatasan modul berikutnya.
+                                Superadmin memiliki akses penuh. RBAC lain mengikuti urutan Admin, Owner/Direksi, PIC, Leader, lalu Staff.
                             </div>
                         </div>
 

@@ -135,6 +135,8 @@ class LinkPublikController extends Controller
             'judulHalaman' => $pengguna->judulLinkPublik(),
             'namaPublik' => $pengguna->namaTampilLinkPublik(),
             'avatarPublikUrl' => $pengguna->avatarLinkPublikUrl(),
+            'nomorWaPublik' => $pengguna->nomorWaLinkTampil(),
+            'urlWaPublik' => $pengguna->urlWaLinkPublik(),
             'headlineHalaman' => $pengguna->headlineLinkPublik(),
             'bioHalaman' => $pengguna->bioLinkPublik(),
             'labelCta' => $pengguna->labelCtaLinkPublik(),

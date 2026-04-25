@@ -21,42 +21,59 @@
     >
         <div class="container container-tight py-5">
             <div class="panel-link-publik">
-                <div class="text-center">
-                    @if ($avatarPublikUrl)
-                        <div class="avatar-link-publik-frame mx-auto mb-3">
-                            <img src="{{ $avatarPublikUrl }}" alt="Avatar {{ $namaPublik }}" class="avatar-link-publik-img">
-                        </div>
-                    @else
-                        <div class="avatar avatar-xl avatar-app mx-auto mb-3">
+                <div class="hero-link-publik">
+                    <div class="avatar-link-publik-frame">
+                        @if ($avatarPublikUrl)
+                            <img
+                                src="{{ $avatarPublikUrl }}"
+                                alt="Avatar {{ $namaPublik }}"
+                                class="avatar-link-publik-img"
+                                onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');"
+                            >
+                        @endif
+                        <span class="avatar-link-publik-fallback {{ $avatarPublikUrl ? 'd-none' : '' }}">
                             {{ $pengguna->inisialLinkPublik() }}
+                        </span>
+                    </div>
+                    @if ($menggunakanDomainKustom || $sourceAktif)
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            @if ($menggunakanDomainKustom)
+                                <div class="badge-link-publik">Domain Kustom</div>
+                            @endif
+                            @if ($sourceAktif)
+                                <div class="badge-link-publik">Source: {{ $sourceAktif }}</div>
+                            @endif
                         </div>
                     @endif
-                    <div class="d-flex justify-content-center gap-2 flex-wrap">
-                        <div class="badge-link-publik">Link Publik</div>
-                        <div class="badge-link-publik">{{ $temaHalaman['label'] }}</div>
-                        @if ($menggunakanDomainKustom)
-                            <div class="badge-link-publik">Domain Kustom</div>
-                        @endif
-                        @if ($sourceAktif)
-                            <div class="badge-link-publik">Source: {{ $sourceAktif }}</div>
-                        @endif
-                    </div>
-                    <h1 class="mt-3 mb-2">{{ $namaPublik }}</h1>
+                    <h1 class="judul-link-publik">{{ $namaPublik }}</h1>
                     @if ($headlineHalaman)
                         <div class="headline-link-publik">{{ $headlineHalaman }}</div>
                     @endif
                     @if ($bioHalaman)
-                        <p class="deskripsi-link-publik mx-auto mt-3">
+                        <p class="deskripsi-link-publik mx-auto mb-0">
                             {{ $bioHalaman }}
                         </p>
                     @endif
+                    @if ($nomorWaPublik)
+                        <div class="kontak-link-publik">
+                            <span class="badge-link-publik">WhatsApp</span>
+                            <div class="fw-semibold mt-2">{{ $nomorWaPublik }}</div>
+                        </div>
+                    @endif
                 </div>
 
-                @if ($urlCta)
-                    <div class="mt-4">
-                        <a href="{{ $urlCtaPublik }}" class="tombol-cta-link-publik">
-                            {{ $labelCta }}
-                        </a>
+                @if ($urlCta || $urlWaPublik)
+                    <div class="grup-aksi-link-publik mt-4">
+                        @if ($urlCta)
+                            <a href="{{ $urlCtaPublik }}" class="tombol-cta-link-publik">
+                                {{ $labelCta }}
+                            </a>
+                        @endif
+                        @if ($urlWaPublik)
+                            <a href="{{ $urlWaPublik }}" class="tombol-wa-link-publik" target="_blank" rel="noopener noreferrer">
+                                Chat WhatsApp
+                            </a>
+                        @endif
                     </div>
                 @endif
 

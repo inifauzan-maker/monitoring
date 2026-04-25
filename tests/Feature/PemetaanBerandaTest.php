@@ -24,8 +24,8 @@ class PemetaanBerandaTest extends TestCase
         $response
             ->assertOk()
             ->assertSee('Pemetaan Beranda')
-            ->assertSee('Level 1')
-            ->assertSee('Level 5')
+            ->assertSee('Admin')
+            ->assertSee('Staff')
             ->assertSee('Konten & Distribusi')
             ->assertSee('Preview Profil')
             ->assertSee('Indikator utama')

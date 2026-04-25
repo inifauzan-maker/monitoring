@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
     'email',
     'slug_link',
     'nama_tampil_link',
+    'nomor_wa_link',
     'judul_link',
     'headline_link',
     'bio_link',
@@ -151,6 +152,32 @@ class User extends Authenticatable
         return $this->nama_tampil_link ?: $this->judul_link ?: $this->name;
     }
 
+    public function nomorWaLinkPublik(): ?string
+    {
+        return self::normalisasiNomorWaLink($this->nomor_wa_link);
+    }
+
+    public function nomorWaLinkTampil(): ?string
+    {
+        $nomor = $this->nomorWaLinkPublik();
+
+        if (! $nomor) {
+            return null;
+        }
+
+        return Str::of($nomor)
+            ->replaceMatches('/(\d{4})(?=\d)/', '$1 ')
+            ->trim()
+            ->value();
+    }
+
+    public function urlWaLinkPublik(): ?string
+    {
+        $nomor = $this->nomorWaLinkPublik();
+
+        return $nomor ? 'https://wa.me/'.$nomor : null;
+    }
+
     public function inisialLinkPublik(): string
     {
         $inisial = Str::of($this->namaTampilLinkPublik())
@@ -187,6 +214,10 @@ class User extends Authenticatable
     public function avatarLinkPublikUrl(): ?string
     {
         if (! filled($this->avatar_link)) {
+            return null;
+        }
+
+        if (! Storage::disk('public')->exists($this->avatar_link)) {
             return null;
         }
 
@@ -300,6 +331,33 @@ class User extends Authenticatable
         }
 
         return rtrim(strtolower($host), '.');
+    }
+
+    public static function normalisasiNomorWaLink(?string $nilai): ?string
+    {
+        if (! filled($nilai)) {
+            return null;
+        }
+
+        $nomor = preg_replace('/[^\d+]+/', '', trim((string) $nilai));
+
+        if (! is_string($nomor) || $nomor === '') {
+            return null;
+        }
+
+        if (Str::startsWith($nomor, '+')) {
+            $nomor = ltrim($nomor, '+');
+        }
+
+        if (Str::startsWith($nomor, '0')) {
+            $nomor = '62'.Str::after($nomor, '0');
+        }
+
+        if (! preg_match('/^62\d{8,15}$/', $nomor)) {
+            return null;
+        }
+
+        return $nomor;
     }
 
     public static function apakahDomainKustomLinkValid(?string $host): bool

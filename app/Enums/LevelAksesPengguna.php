@@ -15,11 +15,11 @@ enum LevelAksesPengguna: string
     {
         return match ($this) {
             self::SUPERADMIN => 'Superadmin',
-            self::LEVEL_1 => 'Level 1',
-            self::LEVEL_2 => 'Level 2',
-            self::LEVEL_3 => 'Level 3',
-            self::LEVEL_4 => 'Level 4',
-            self::LEVEL_5 => 'Level 5',
+            self::LEVEL_1 => 'Admin',
+            self::LEVEL_2 => 'Owner/Direksi',
+            self::LEVEL_3 => 'PIC',
+            self::LEVEL_4 => 'Leader',
+            self::LEVEL_5 => 'Staff',
         };
     }
 

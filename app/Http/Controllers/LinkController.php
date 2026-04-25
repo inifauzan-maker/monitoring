@@ -178,6 +178,7 @@ class LinkController extends Controller
         $snapshotSebelum = [
             'slug_link' => $pengguna->slug_link,
             'nama_tampil_link' => $pengguna->nama_tampil_link,
+            'nomor_wa_link' => $pengguna->nomor_wa_link,
             'judul_link' => $pengguna->judul_link,
             'tema_link' => $pengguna->tema_link,
             'domain_kustom_link' => $pengguna->domain_kustom_link,
@@ -192,6 +193,16 @@ class LinkController extends Controller
                 Rule::unique('users', 'slug_link')->ignore($pengguna->id),
             ],
             'nama_tampil_link' => ['nullable', 'string', 'max:80'],
+            'nomor_wa_link' => [
+                'nullable',
+                'string',
+                'max:24',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (filled($value) && ! User::normalisasiNomorWaLink(is_string($value) ? $value : null)) {
+                        $fail('Masukkan nomor WhatsApp yang valid, misalnya 081234567890 atau 6281234567890.');
+                    }
+                },
+            ],
             'judul_link' => ['nullable', 'string', 'max:80'],
             'headline_link' => ['nullable', 'string', 'max:120'],
             'bio_link' => ['nullable', 'string', 'max:320'],
@@ -254,6 +265,7 @@ class LinkController extends Controller
         $pengguna->update([
             'slug_link' => Str::lower($data['slug_link']),
             'nama_tampil_link' => $data['nama_tampil_link'] ?: null,
+            'nomor_wa_link' => User::normalisasiNomorWaLink($data['nomor_wa_link'] ?? null),
             'judul_link' => $data['judul_link'] ?: null,
             'headline_link' => $data['headline_link'] ?: null,
             'bio_link' => $data['bio_link'] ?: null,
@@ -272,6 +284,7 @@ class LinkController extends Controller
         $snapshotSesudah = [
             'slug_link' => $pengguna->slug_link,
             'nama_tampil_link' => $pengguna->nama_tampil_link,
+            'nomor_wa_link' => $pengguna->nomor_wa_link,
             'judul_link' => $pengguna->judul_link,
             'tema_link' => $pengguna->tema_link,
             'domain_kustom_link' => $pengguna->domain_kustom_link,

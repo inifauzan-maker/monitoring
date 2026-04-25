@@ -3,7 +3,7 @@
 @section('judul_halaman', 'Pengaturan Pengguna')
 @section('pratitel_halaman', 'Pengaturan')
 @section('judul_konten', 'Pengaturan Pengguna')
-@section('deskripsi_halaman', 'Kelola akun aplikasi dan tetapkan level akses dari superadmin sampai level 5.')
+@section('deskripsi_halaman', 'Kelola akun aplikasi dan tetapkan level akses dari superadmin, admin, owner/direksi, PIC, leader, hingga staff.')
 
 @section('aksi_halaman')
     <div class="btn-list">

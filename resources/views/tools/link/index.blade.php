@@ -19,6 +19,10 @@
 @endsection
 
 @section('konten')
+    @php
+        $punyaLink = $items->isNotEmpty();
+    @endphp
+
     <div class="row row-deck row-cards mb-4">
         <div class="col-sm-6 col-lg-3">
             <div class="card kartu-ringkasan">
@@ -138,20 +142,25 @@
                     <div class="border rounded-3 p-3 mb-3">
                         <div class="small text-secondary mb-2">Preview identitas publik</div>
                         <div class="d-flex align-items-center gap-3">
-                            @if ($pengguna->avatarLinkPublikUrl())
-                                <img
-                                    src="{{ $pengguna->avatarLinkPublikUrl() }}"
-                                    alt="Avatar {{ $pengguna->namaTampilLinkPublik() }}"
-                                    class="avatar avatar-xl rounded-3 object-fit-cover"
-                                >
-                            @else
-                                <span class="avatar avatar-xl rounded-3 avatar-app">
+                            <div class="avatar-link-publik-frame avatar-link-publik-frame-mini flex-shrink-0">
+                                @if ($pengguna->avatarLinkPublikUrl())
+                                    <img
+                                        src="{{ $pengguna->avatarLinkPublikUrl() }}"
+                                        alt="Avatar {{ $pengguna->namaTampilLinkPublik() }}"
+                                        class="avatar-link-publik-img"
+                                        onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');"
+                                    >
+                                @endif
+                                <span class="avatar-link-publik-fallback {{ $pengguna->avatarLinkPublikUrl() ? 'd-none' : '' }}">
                                     {{ $pengguna->inisialLinkPublik() }}
                                 </span>
-                            @endif
+                            </div>
                             <div class="min-w-0">
                                 <div class="fw-semibold">{{ $pengguna->namaTampilLinkPublik() }}</div>
                                 <div class="text-secondary small text-break mt-1">{{ $pengguna->judulLinkPublik() }}</div>
+                                @if ($pengguna->nomorWaLinkTampil())
+                                    <div class="text-secondary small text-break mt-1">WhatsApp: {{ $pengguna->nomorWaLinkTampil() }}</div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -170,6 +179,19 @@
                                 class="form-control"
                                 placeholder="Nama yang tampil di halaman link publik"
                             >
+                        </div>
+
+                        <div>
+                            <label for="nomor_wa_link" class="form-label">Nomor WhatsApp</label>
+                            <input
+                                id="nomor_wa_link"
+                                type="text"
+                                name="nomor_wa_link"
+                                value="{{ old('nomor_wa_link', $pengguna->nomor_wa_link) }}"
+                                class="form-control"
+                                placeholder="081234567890 atau 6281234567890"
+                            >
+                            <div class="form-hint">Nomor ini bisa ditampilkan dan dibuka langsung ke WhatsApp pada halaman publik.</div>
                         </div>
 
                         <div>
@@ -485,58 +507,60 @@
                 </div>
             </div>
 
-            <div class="card h-100">
-                <div class="card-header">
-                    <div>
-                        <div class="text-secondary text-uppercase fw-semibold small">Pratinjau Link Aktif</div>
-                        <h3 class="card-title mt-1">Link yang sedang ditampilkan untuk pengguna ini</h3>
-                    </div>
-                </div>
-                <div class="card-body">
-                    @if ($linkAktif->isEmpty())
-                        <div class="empty">
-                            <div class="empty-img">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-link-off" width="64" height="64" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                    <path d="M9 15l3 -3m2 -2l1 -1a3 3 0 0 1 4 4l-1 1" />
-                                    <path d="M5 11l-1 1a3 3 0 0 0 4 4l1 -1" />
-                                    <path d="M3 3l18 18" />
-                                </svg>
-                            </div>
-                            <p class="empty-title">Belum ada link aktif</p>
-                            <p class="empty-subtitle text-secondary">
-                                Tambahkan link edukasi, promo, katalog, atau marketplace dari form di samping.
-                            </p>
+            @if ($punyaLink)
+                <div class="card h-100">
+                    <div class="card-header">
+                        <div>
+                            <div class="text-secondary text-uppercase fw-semibold small">Pratinjau Link Aktif</div>
+                            <h3 class="card-title mt-1">Link yang sedang ditampilkan untuk pengguna ini</h3>
                         </div>
-                    @else
-                        <div class="list-group list-group-flush">
-                            @foreach ($linkAktif as $link)
-                                <div class="list-group-item px-0">
-                                    <div class="d-flex flex-column flex-md-row gap-3 align-items-md-center justify-content-between">
-                                        <div class="min-w-0">
-                                            <div class="fw-semibold">{{ $link->judul }}</div>
-                                            @if ($link->deskripsi)
-                                                <div class="text-secondary small mt-1">{{ $link->deskripsi }}</div>
-                                            @endif
-                                            <div class="text-secondary small mt-2 text-truncate">{{ $link->urlTujuan() }}</div>
-                                            <div class="small text-primary mt-2">{{ number_format($link->total_klik) }} klik</div>
-                                        </div>
-                                        <div class="d-flex gap-2 align-items-center">
-                                            <span class="badge bg-success-lt text-success">Urutan {{ $link->urutan }}</span>
-                                            <a href="{{ $link->url_publik }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
-                                                Buka
-                                            </a>
-                                            <button type="button" class="btn btn-outline-secondary btn-sm" data-copy-text="{{ $link->urlTujuan() }}">
-                                                Salin
-                                            </button>
+                    </div>
+                    <div class="card-body">
+                        @if ($linkAktif->isEmpty())
+                            <div class="empty">
+                                <div class="empty-img">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-link-off" width="64" height="64" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M9 15l3 -3m2 -2l1 -1a3 3 0 0 1 4 4l-1 1" />
+                                        <path d="M5 11l-1 1a3 3 0 0 0 4 4l1 -1" />
+                                        <path d="M3 3l18 18" />
+                                    </svg>
+                                </div>
+                                <p class="empty-title">Belum ada link aktif</p>
+                                <p class="empty-subtitle text-secondary">
+                                    Anda sudah punya data link, tetapi belum ada yang diaktifkan untuk halaman publik.
+                                </p>
+                            </div>
+                        @else
+                            <div class="list-group list-group-flush">
+                                @foreach ($linkAktif as $link)
+                                    <div class="list-group-item px-0">
+                                        <div class="d-flex flex-column flex-md-row gap-3 align-items-md-center justify-content-between">
+                                            <div class="min-w-0">
+                                                <div class="fw-semibold">{{ $link->judul }}</div>
+                                                @if ($link->deskripsi)
+                                                    <div class="text-secondary small mt-1">{{ $link->deskripsi }}</div>
+                                                @endif
+                                                <div class="text-secondary small mt-2 text-truncate">{{ $link->urlTujuan() }}</div>
+                                                <div class="small text-primary mt-2">{{ number_format($link->total_klik) }} klik</div>
+                                            </div>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <span class="badge bg-success-lt text-success">Urutan {{ $link->urutan }}</span>
+                                                <a href="{{ $link->url_publik }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
+                                                    Buka
+                                                </a>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" data-copy-text="{{ $link->urlTujuan() }}">
+                                                    Salin
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
                 </div>
-            </div>
+            @endif
         </div>
 
         <div class="col-12">
@@ -548,7 +572,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if ($items->isEmpty())
+                    @if (! $punyaLink)
                         <div class="empty py-5">
                             <p class="empty-title">Belum ada link</p>
                             <p class="empty-subtitle text-secondary">

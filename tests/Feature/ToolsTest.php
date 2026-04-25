@@ -48,6 +48,7 @@ class ToolsTest extends TestCase
                 '_method' => 'PUT',
                 'slug_link' => 'profil-baru',
                 'nama_tampil_link' => 'Superadmin Publik',
+                'nomor_wa_link' => '0812-3456-7890',
                 'domain_kustom_link' => 'Link.Example.Test',
                 'judul_link' => 'Link Publik Monitoring',
                 'headline_link' => 'Satu pintu untuk semua tautan penting',
@@ -63,6 +64,7 @@ class ToolsTest extends TestCase
             'id' => $pengguna->id,
             'slug_link' => 'profil-baru',
             'nama_tampil_link' => 'Superadmin Publik',
+            'nomor_wa_link' => '6281234567890',
             'domain_kustom_link' => 'link.example.test',
             'judul_link' => 'Link Publik Monitoring',
             'headline_link' => 'Satu pintu untuk semua tautan penting',
@@ -253,6 +255,7 @@ class ToolsTest extends TestCase
         $pengguna = User::factory()->create([
             'slug_link' => 'avatar-link-1',
             'nama_tampil_link' => 'Nama Publik Admin',
+            'nomor_wa_link' => '6281234567890',
             'judul_link' => 'Brand Monitoring',
             'avatar_link' => $avatarPath,
         ]);
@@ -261,7 +264,23 @@ class ToolsTest extends TestCase
             ->assertOk()
             ->assertSee('Nama Publik Admin')
             ->assertSee('Brand Monitoring')
+            ->assertSee('6281 2345 6789')
+            ->assertSee('Chat WhatsApp')
             ->assertSee(Storage::disk('public')->url($avatarPath), false);
+    }
+
+    public function test_halaman_link_publik_memakai_fallback_inisial_jika_avatar_tidak_tersedia(): void
+    {
+        $pengguna = User::factory()->create([
+            'slug_link' => 'avatar-fallback-1',
+            'nama_tampil_link' => 'Bimbel Vilmer',
+            'avatar_link' => 'avatar-link/tidak-ada.png',
+        ]);
+
+        $this->get(route('publik.link.show', $pengguna))
+            ->assertOk()
+            ->assertSee('BV')
+            ->assertDontSee('avatar-link/tidak-ada.png');
     }
 
     public function test_buka_link_publik_menambah_total_klik_dan_redirect_ke_url_tujuan(): void
@@ -375,7 +394,7 @@ class ToolsTest extends TestCase
             ->assertSee('Halaman Link Tema')
             ->assertSee('Promo dan katalog dalam satu halaman')
             ->assertSee('Lihat Promo Utama')
-            ->assertSee('Night Studio');
+            ->assertDontSee('Night Studio');
     }
 
     public function test_dashboard_link_menampilkan_statistik_harian_top_link_dan_source_traffic(): void
