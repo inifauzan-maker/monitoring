@@ -28,7 +28,7 @@
                     </span>
 
                     <div class="wadah-teks-sidebar">
-                        <div class="fw-bold teks-judul-sidebar">{{ config('app.name', 'Monitoring') }}</div>
+                        <div class="fw-bold teks-judul-sidebar">{{ config('app.name', 'Simarketing') }}</div>
                         <div class="small teks-subjudul-sidebar">Dashboard aplikasi</div>
                     </div>
                 </div>

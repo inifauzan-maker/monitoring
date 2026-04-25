@@ -215,9 +215,19 @@ body {
         transition: width 0.18s ease, min-width 0.18s ease;
     }
 
+    .page-wrapper {
+        min-width: 0;
+        margin-inline-start: 18rem;
+        transition: margin-inline-start 0.18s ease;
+    }
+
     body.sidebar-collapsed .navbar-vertical {
         width: 5.75rem;
         min-width: 5.75rem;
+    }
+
+    body.sidebar-collapsed .page-wrapper {
+        margin-inline-start: 5.75rem;
     }
 
     body.sidebar-collapsed .navbar-vertical .container-fluid {

@@ -83,7 +83,7 @@
                 </div>
 
                 <div class="text-center small mt-4" style="color: var(--link-publik-muted);">
-                    Dikelola melalui Monitoring
+                    Dikelola melalui {{ config('app.name', 'Simarketing') }}
                 </div>
             </div>
         </div>

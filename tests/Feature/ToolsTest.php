@@ -48,7 +48,7 @@ class ToolsTest extends TestCase
                 '_method' => 'PUT',
                 'slug_link' => 'profil-baru',
                 'nama_tampil_link' => 'Superadmin Publik',
-                'domain_kustom_link' => 'Link.Monitoring.Test',
+                'domain_kustom_link' => 'Link.Example.Test',
                 'judul_link' => 'Link Publik Monitoring',
                 'headline_link' => 'Satu pintu untuk semua tautan penting',
                 'bio_link' => 'Semua tautan penting ada di sini.',
@@ -63,7 +63,7 @@ class ToolsTest extends TestCase
             'id' => $pengguna->id,
             'slug_link' => 'profil-baru',
             'nama_tampil_link' => 'Superadmin Publik',
-            'domain_kustom_link' => 'link.monitoring.test',
+            'domain_kustom_link' => 'link.example.test',
             'judul_link' => 'Link Publik Monitoring',
             'headline_link' => 'Satu pintu untuk semua tautan penting',
             'bio_link' => 'Semua tautan penting ada di sini.',
@@ -543,7 +543,7 @@ class ToolsTest extends TestCase
         $pengguna = User::factory()->create([
             'slug_link' => 'domain-kustom-1',
             'judul_link' => 'Landing Domain Kustom',
-            'domain_kustom_link' => 'link.monitoring.test',
+            'domain_kustom_link' => 'link.example.test',
         ]);
 
         LinkPengguna::create([
@@ -555,7 +555,7 @@ class ToolsTest extends TestCase
             'aktif' => true,
         ]);
 
-        $this->get('http://link.monitoring.test/')
+        $this->get('http://link.example.test/')
             ->assertOk()
             ->assertSee('Landing Domain Kustom')
             ->assertSee('Domain Kustom')
@@ -568,7 +568,7 @@ class ToolsTest extends TestCase
     {
         $pengguna = User::factory()->create([
             'slug_link' => 'domain-kustom-klik-1',
-            'domain_kustom_link' => 'klik.monitoring.test',
+            'domain_kustom_link' => 'klik.example.test',
         ]);
 
         $link = LinkPengguna::create([
@@ -580,7 +580,7 @@ class ToolsTest extends TestCase
             'aktif' => true,
         ]);
 
-        $this->get('http://klik.monitoring.test/link/'.$link->id.'?source=instagram.com')
+        $this->get('http://klik.example.test/link/'.$link->id.'?source=instagram.com')
             ->assertRedirect('https://example.com/promo');
 
         $this->assertDatabaseHas('aktivitas_link_publik', [

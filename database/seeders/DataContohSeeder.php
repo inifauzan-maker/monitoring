@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\LevelAksesPengguna;
 use App\Models\Artikel;
 use App\Models\BankSoalLms;
 use App\Models\DataSiswa;
@@ -26,9 +27,9 @@ class DataContohSeeder extends Seeder
 {
     public function run(): void
     {
-        $superadmin = User::query()->where('email', 'superadmin@monitoring.test')->first();
-        $level3 = User::query()->where('email', 'level3@monitoring.test')->first();
-        $level5 = User::query()->where('email', 'level5@monitoring.test')->first();
+        $superadmin = User::query()->where('email', AkunAwalSeeder::emailAdmin())->first();
+        $level3 = User::query()->where('email', AkunDemoSeeder::emailUntukLevel(LevelAksesPengguna::LEVEL_3))->first();
+        $level5 = User::query()->where('email', AkunDemoSeeder::emailUntukLevel(LevelAksesPengguna::LEVEL_5))->first();
 
         if (! $superadmin || ! $level3 || ! $level5) {
             return;
@@ -717,8 +718,8 @@ class DataContohSeeder extends Seeder
         $proyek = Proyek::query()->updateOrCreate(
             ['kode_project' => 'PRJ-DEMO-001'],
             [
-                'nama_project' => 'Revamp Dashboard Monitoring',
-                'klien' => 'Internal Monitoring',
+                'nama_project' => 'Revamp Dashboard Simarketing',
+                'klien' => 'Internal Simarketing',
                 'status_project' => 'berjalan',
                 'prioritas_project' => 'tinggi',
                 'tanggal_mulai' => now()->subDays(7)->toDateString(),

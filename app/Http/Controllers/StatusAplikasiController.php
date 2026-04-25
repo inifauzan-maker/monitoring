@@ -23,7 +23,7 @@ class StatusAplikasiController extends Controller
 
         return response()->json([
             'status' => $statusAplikasi,
-            'aplikasi' => config('app.name', 'Monitoring'),
+            'aplikasi' => config('app.name', 'Simarketing'),
             'waktu_server' => now()->toIso8601String(),
             'dependensi' => [
                 'database' => $databaseSehat ? 'ok' : 'gagal',

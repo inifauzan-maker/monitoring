@@ -1,4 +1,4 @@
-# Panduan Deploy Monitoring
+# Panduan Deploy Simarketing
 
 Panduan ini memakai asumsi server VPS Linux dengan:
 
@@ -55,13 +55,17 @@ Lalu isi minimal:
 - `DB_PASSWORD`
 - `MAIL_*` jika email dipakai
 - `YOUTUBE_API_KEY` jika fitur playlist YouTube dipakai
+- `ADMIN_AWAL_*` untuk akun admin awal
+- `SEED_DATA_CONTOH=false` untuk produksi
 
 Catatan:
 
 - App ini memakai `SESSION_DRIVER=database`
 - Cache default juga `database`
 - Queue default `database`
-- Untuk shared hosting seperti Hostinger/cPanel, isi `APP_PUBLIC_PATH=public_html` bila source Laravel dipasang di root domain dan web root tetap mengarah ke folder `public_html`
+- Untuk shared hosting seperti Hostinger/cPanel:
+  - isi `APP_PUBLIC_PATH=public_html` bila source Laravel dipasang di root domain dan web root tetap mengarah ke folder `public_html`
+  - isi `APP_PUBLIC_PATH=.` bila seluruh source aplikasi memang dipasang langsung di dalam `public_html`
 
 Jadi migration wajib dijalankan agar tabel pendukung tersedia.
 
@@ -92,6 +96,8 @@ Opsional jika server staging/demo ingin langsung terisi data contoh:
 ```bash
 php artisan db:seed --force
 ```
+
+Untuk produksi, pastikan `.env` berisi `SEED_DATA_CONTOH=false`.
 
 ## 7. Rapikan Permission dan Storage Link
 
@@ -126,7 +132,7 @@ php artisan view:cache
 ```nginx
 server {
     listen 80;
-    server_name monitoring.domainanda.com;
+    server_name simarketing.sivmi.id;
     root /var/www/monitoring/public;
 
     index index.php index.html;
@@ -171,6 +177,13 @@ dan Anda ingin source Laravel dipasang langsung di root domain, maka:
 
 Dengan pendekatan ini, perintah seperti `php artisan storage:link` akan mengarah ke `public_html/storage`, bukan ke folder `public/storage` bawaan Laravel.
 
+Jika source aplikasi justru dipasang langsung di dalam `public_html`, gunakan:
+
+- `.env` di `public_html/.env`
+- `APP_PUBLIC_PATH=.`
+
+Pada pola ini, Laravel akan membaca asset build dari `build/manifest.json` di root `public_html`, bukan dari `public/build`.
+
 ## 11. Verifikasi Setelah Deploy
 
 Periksa hal berikut:
@@ -183,7 +196,28 @@ Periksa hal berikut:
 4. Pastikan asset CSS/JS termuat normal.
 5. Coba buka modul utama seperti `Produk`, `Projects`, `LMS`, dan `Notifikasi`.
 
-## 12. Checklist Update Rilis Berikutnya
+## 12. Checklist Produksi Hostinger
+
+Checklist minimum sebelum aplikasi dipakai:
+
+1. `APP_URL` sudah mengarah ke domain final
+2. `APP_PUBLIC_PATH` sudah sesuai struktur hosting
+3. `DB_*` sudah benar dan lulus `php artisan migrate --force`
+4. `ADMIN_AWAL_*` sudah diisi untuk akun produksi
+5. `SEED_DATA_CONTOH=false`
+6. `storage:link` sudah berhasil
+7. `/health` mengembalikan status `ok`
+8. login memakai akun produksi berhasil
+9. asset `build/manifest.json` tersedia di public path aktif
+10. akun demo dan data contoh sudah dibersihkan bila tidak dibutuhkan
+
+Untuk membersihkan data contoh di server:
+
+```bash
+php artisan app:bersihkan-data-contoh --force --hapus-akun-demo
+```
+
+## 13. Checklist Update Rilis Berikutnya
 
 Saat ada update code:
 
@@ -199,7 +233,7 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-## 13. Deploy dari GitHub Actions
+## 14. Deploy dari GitHub Actions
 
 Repository ini sudah disiapkan untuk deploy manual dari GitHub Actions melalui workflow:
 
@@ -231,7 +265,7 @@ Isi di `Settings > Secrets and variables > Actions`:
 - `DEPLOY_SSH_KEY`
   Private key SSH yang dipakai GitHub Actions untuk masuk ke server
 - `DEPLOY_HEALTHCHECK_URL`
-  Opsional, contoh `https://monitoring.domainanda.com/health`
+  Opsional, contoh `https://simarketing.sivmi.id/health`
 
 ### Langkah awal di server sebelum workflow dipakai
 
@@ -251,7 +285,9 @@ Catatan:
 
 - Untuk alur deploy GitHub Actions terbaru, server tidak wajib punya `npm`
 - Asset frontend dibuild di GitHub Actions lalu dikirim ke server setelah deploy
-- Jika memakai shared hosting dengan `public_html`, isi `APP_PUBLIC_PATH=public_html` di `.env`
+- Jika memakai shared hosting dengan `public_html`, sesuaikan `APP_PUBLIC_PATH`:
+  - `public_html` bila source ada di root domain
+  - `.` bila source aplikasi langsung berada di `public_html`
 
 Jika repository private, server juga harus bisa menarik source code dari GitHub saat `git pull` dijalankan. Biasanya dengan deploy key atau PAT yang sudah terpasang di server.
 
@@ -274,7 +310,7 @@ Selain itu, Anda juga tetap bisa menjalankan manual:
 - `workflow_dispatch` tetap dipertahankan agar Anda masih bisa deploy manual saat diperlukan
 - skrip deploy server ada di `skrip/deploy_produksi.sh`
 
-## 14. Catatan Risiko
+## 15. Catatan Risiko
 
 - Jika `SESSION_DRIVER=database` tetapi migration belum dijalankan, login akan gagal.
 - Jika MySQL mati, aplikasi akan ikut gagal karena session, cache, dan sebagian modul memakai database.

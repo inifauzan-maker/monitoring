@@ -1,6 +1,6 @@
-# Monitoring
+# Simarketing
 
-Aplikasi monitoring berbasis Laravel 13 dengan modul:
+Aplikasi Simarketing berbasis Laravel 13 dengan modul:
 
 - RBAC pengguna
 - Produk, Leads, Siswa, Omzet
@@ -28,16 +28,30 @@ npm run build
 php artisan serve
 ```
 
-## Akun Contoh
+## Akun Awal
 
-Seeder default membuat akun berikut dengan password `password`:
+Seeder default sekarang membuat akun admin awal dari nilai `.env` berikut:
 
-- `superadmin@monitoring.test`
-- `level1@monitoring.test`
-- `level2@monitoring.test`
-- `level3@monitoring.test`
-- `level4@monitoring.test`
-- `level5@monitoring.test`
+- `ADMIN_AWAL_NAMA`
+- `ADMIN_AWAL_EMAIL`
+- `ADMIN_AWAL_PASSWORD`
+- `ADMIN_AWAL_LEVEL_AKSES`
+
+Data contoh dan akun demo hanya akan dibuat jika `SEED_DATA_CONTOH=true`.
+
+## Bersihkan Data Contoh
+
+Untuk membersihkan data contoh/demo di seluruh modul utama:
+
+```bash
+php artisan app:bersihkan-data-contoh --force
+```
+
+Jika sekalian ingin menghapus akun demo yang terdaftar di konfigurasi data awal:
+
+```bash
+php artisan app:bersihkan-data-contoh --force --hapus-akun-demo
+```
 
 ## Endpoint Penting
 
@@ -54,4 +68,7 @@ Deploy dari GitHub Actions juga sudah disiapkan lewat workflow:
 
 Workflow ini berjalan otomatis saat ada `push` ke `main`, dan juga masih bisa dijalankan manual dari tab `Actions`.
 
-Untuk shared hosting yang memakai `public_html`, aplikasi ini juga mendukung `APP_PUBLIC_PATH=public_html` agar source Laravel tetap aman di root/domain path tetapi folder publik mengikuti struktur hosting.
+Untuk shared hosting yang memakai `public_html`, aplikasi ini mendukung dua pola:
+
+- `APP_PUBLIC_PATH=public_html` jika source Laravel berada di root domain dan folder publik tetap `public_html`
+- `APP_PUBLIC_PATH=.` jika seluruh source aplikasi memang dipasang langsung di dalam `public_html`

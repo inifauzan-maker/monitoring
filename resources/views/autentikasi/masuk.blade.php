@@ -18,7 +18,7 @@
                     <path d="M11 13l-3.5 3.5" />
                 </svg>
             </span>
-            <span class="fs-2 fw-bold text-body">{{ config('app.name', 'Monitoring') }}</span>
+            <span class="fs-2 fw-bold text-body">{{ config('app.name', 'Simarketing') }}</span>
         </a>
     </div>
 

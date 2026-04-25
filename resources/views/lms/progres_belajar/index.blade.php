@@ -90,11 +90,11 @@
                         </svg>
                     </div>
                     <div>
-                        <h4 class="alert-title mb-1">Target Monitoring</h4>
+                        <h4 class="alert-title mb-1">Target Pantauan</h4>
                         <div>
                             {{ $penggunaTarget->name }} <span class="text-secondary">({{ $penggunaTarget->email }})</span>
                             @if ($isSuperadmin && auth()->id() !== $penggunaTarget->id)
-                                <span class="badge bg-blue-lt text-blue ms-2">Mode Monitoring Pengguna</span>
+                                <span class="badge bg-blue-lt text-blue ms-2">Mode Pantauan Pengguna</span>
                             @endif
                         </div>
                     </div>

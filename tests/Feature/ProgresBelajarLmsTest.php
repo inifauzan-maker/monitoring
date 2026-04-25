@@ -79,7 +79,7 @@ class ProgresBelajarLmsTest extends TestCase
     public function test_superadmin_bisa_memfilter_target_pengguna_pada_progres_belajar(): void
     {
         $superadmin = User::factory()->superadmin()->create([
-            'name' => 'Superadmin Monitoring',
+            'name' => 'Superadmin Simarketing',
         ]);
         $penggunaA = User::factory()->create([
             'name' => 'Peserta A',
@@ -114,7 +114,7 @@ class ProgresBelajarLmsTest extends TestCase
             ->assertOk()
             ->assertSee('Peserta A')
             ->assertSee('75%')
-            ->assertSee('Mode Monitoring Pengguna');
+            ->assertSee('Mode Pantauan Pengguna');
     }
 
     public function test_superadmin_bisa_memperbarui_progres_pengguna_lain(): void

@@ -58,7 +58,7 @@ class PenggunaController extends Controller
         PencatatNotifikasi::kirim(
             $penggunaBaru,
             'Akun Anda sudah dibuat',
-            'Akun baru untuk aplikasi Monitoring telah dibuat. Silakan masuk dan mulai gunakan modul sesuai level akses Anda.',
+            'Akun baru untuk aplikasi '.config('app.name', 'Simarketing').' telah dibuat. Silakan masuk dan mulai gunakan modul sesuai level akses Anda.',
             'success',
             route('dashboard.beranda'),
             [
