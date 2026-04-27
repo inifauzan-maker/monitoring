@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\LinkPengguna;
 use App\Models\User;
 use App\Support\AnalitikLinkPublik;
+use App\Support\AvatarLinkPublikStorage;
 use App\Support\PencatatLogAktivitas;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -250,16 +250,16 @@ class LinkController extends Controller
         $avatarLink = $pengguna->avatar_link;
 
         if ($request->boolean('hapus_avatar_link') && filled($avatarLink)) {
-            Storage::disk('public')->delete($avatarLink);
+            AvatarLinkPublikStorage::hapus($avatarLink);
             $avatarLink = null;
         }
 
         if ($request->hasFile('avatar_link')) {
             if (filled($avatarLink)) {
-                Storage::disk('public')->delete($avatarLink);
+                AvatarLinkPublikStorage::hapus($avatarLink);
             }
 
-            $avatarLink = $request->file('avatar_link')->store('avatar-link', 'public');
+            $avatarLink = AvatarLinkPublikStorage::simpan($request->file('avatar_link'));
         }
 
         $pengguna->update([

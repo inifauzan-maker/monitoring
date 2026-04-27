@@ -603,6 +603,7 @@ class ArtikelController extends Controller
             'judul' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', Rule::unique('artikel', 'slug')->ignore($artikel)],
             'kata_kunci_utama' => ['nullable', 'string', 'max:255'],
+            'keyword_turunan' => ['nullable', 'string'],
             'ringkasan' => ['required', 'string'],
             'konten' => ['required', 'string'],
             'kategori_artikel_id' => ['required', 'exists:kategori_artikel,id'],
@@ -627,6 +628,7 @@ class ArtikelController extends Controller
             'judul' => 'judul',
             'slug' => 'slug',
             'kata_kunci_utama' => 'kata kunci utama',
+            'keyword_turunan' => 'keyword turunan',
             'ringkasan' => 'ringkasan',
             'konten' => 'konten',
             'kategori_artikel_id' => 'kategori',
@@ -642,7 +644,7 @@ class ArtikelController extends Controller
             'alt_gambar_unggulan' => 'alt gambar unggulan',
         ]);
 
-        foreach (['kata_kunci_utama', 'bio_penulis', 'judul_seo', 'deskripsi_seo', 'outline_seo', 'alt_gambar_unggulan', 'diterbitkan_pada'] as $field) {
+        foreach (['kata_kunci_utama', 'keyword_turunan', 'bio_penulis', 'judul_seo', 'deskripsi_seo', 'outline_seo', 'alt_gambar_unggulan', 'diterbitkan_pada'] as $field) {
             if (($validated[$field] ?? null) === '') {
                 $validated[$field] = null;
             }
@@ -725,6 +727,7 @@ class ArtikelController extends Controller
             'judul' => $snapshot['judul'] ?? '',
             'slug' => $snapshot['slug'] ?? Str::slug((string) ($snapshot['judul'] ?? 'artikel')),
             'kata_kunci_utama' => $snapshot['kata_kunci_utama'] ?? null,
+            'keyword_turunan' => $snapshot['keyword_turunan'] ?? null,
             'ringkasan' => $snapshot['ringkasan'] ?? '',
             'konten' => $snapshot['konten'] ?? '',
             'kategori_artikel_id' => $snapshot['kategori_artikel_id'] ?? null,

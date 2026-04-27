@@ -35,6 +35,7 @@ class Artikel extends Model
         'judul',
         'slug',
         'kata_kunci_utama',
+        'keyword_turunan',
         'ringkasan',
         'konten',
         'kategori_artikel_id',
@@ -165,6 +166,7 @@ class Artikel extends Model
             'judul' => $this->judul,
             'slug' => $this->slug,
             'kata_kunci_utama' => $this->kata_kunci_utama,
+            'keyword_turunan' => $this->keyword_turunan,
             'ringkasan' => $this->ringkasan,
             'konten' => $this->konten,
             'kategori_artikel_id' => $this->kategori_artikel_id,
@@ -208,6 +210,226 @@ class Artikel extends Model
         return ! in_array(false, $this->statusChecklistKesiapan(), true);
     }
 
+    public function daftarKeywordTurunan(): array
+    {
+        return collect(preg_split('/\r?\n|,/', (string) $this->keyword_turunan) ?: [])
+            ->map(fn ($item) => trim((string) $item))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    public function intentPencarianDariTeks(string $teks): array
+    {
+        $gabungan = strtolower(trim($teks));
+
+        $peta = [
+            [
+                'kode' => 'transaksional',
+                'label' => 'Transaksional',
+                'regex' => '/\b(daftar|beli|booking|hubungi|konsultasi|jasa|layanan|paket|promo|diskon|harga|biaya)\b/',
+                'alasan' => 'Teks mengarah ke aksi langsung, penawaran, atau intent closing.',
+            ],
+            [
+                'kode' => 'komersial',
+                'label' => 'Komersial',
+                'regex' => '/\b(terbaik|review|vs|perbandingan|rekomendasi|pilihan)\b/',
+                'alasan' => 'Teks menunjukkan pembaca sedang membandingkan opsi sebelum memutuskan.',
+            ],
+            [
+                'kode' => 'navigasional',
+                'label' => 'Navigasional',
+                'regex' => '/\b(login|masuk|kontak|alamat|website resmi|official)\b/',
+                'alasan' => 'Teks terlihat seperti pencarian menuju brand, halaman, atau lokasi tertentu.',
+            ],
+            [
+                'kode' => 'informasional',
+                'label' => 'Informasional',
+                'regex' => '/\b(cara|apa itu|panduan|tutorial|contoh|tips|strategi|langkah)\b/',
+                'alasan' => 'Teks menunjukkan intent belajar atau mencari penjelasan.',
+            ],
+        ];
+
+        foreach ($peta as $intent) {
+            if (preg_match($intent['regex'], $gabungan) === 1) {
+                return [
+                    'kode' => $intent['kode'],
+                    'label' => $intent['label'],
+                    'alasan' => $intent['alasan'],
+                ];
+            }
+        }
+
+        return [
+            'kode' => 'belum-terbaca',
+            'label' => 'Belum Terbaca',
+            'alasan' => 'Teks masih terlalu umum untuk dipetakan ke intent pencarian tertentu.',
+        ];
+    }
+
+    public function bagianOutline(): array
+    {
+        $baris = preg_split('/\r?\n/', (string) $this->outline_seo) ?: [];
+        $bagian = [];
+        $aktif = null;
+
+        $simpanAktif = function () use (&$aktif, &$bagian): void {
+            if (! $aktif || blank($aktif['judul'])) {
+                return;
+            }
+
+            $aktif['isi'] = array_values(array_filter(
+                array_map(fn ($item) => trim((string) $item), $aktif['isi']),
+                fn ($item) => $item !== ''
+            ));
+
+            $bagian[] = $aktif;
+            $aktif = null;
+        };
+
+        foreach ($baris as $barisItem) {
+            $nilai = trim((string) $barisItem);
+
+            if ($nilai === '') {
+                continue;
+            }
+
+            if (preg_match('/^(#{2,6})\s+(.+)$/', $nilai, $cocok) === 1) {
+                $simpanAktif();
+
+                $aktif = [
+                    'level' => strlen($cocok[1]),
+                    'judul' => trim($cocok[2]),
+                    'isi' => [],
+                ];
+
+                continue;
+            }
+
+            if ($aktif !== null) {
+                $aktif['isi'][] = preg_replace('/^[-*]\s+/', '', $nilai) ?? $nilai;
+            }
+        }
+
+        $simpanAktif();
+
+        return $bagian;
+    }
+
+    public function faqDariOutline(): array
+    {
+        $faq = [];
+        $aktif = null;
+
+        $simpanAktif = function () use (&$aktif, &$faq): void {
+            if (! $aktif) {
+                return;
+            }
+
+            $jawaban = collect($aktif['jawaban'])
+                ->map(fn ($item) => trim((string) $item))
+                ->filter()
+                ->implode(' ');
+
+            if ($aktif['pertanyaan'] !== '' && $jawaban !== '') {
+                $faq[] = [
+                    'pertanyaan' => $aktif['pertanyaan'],
+                    'jawaban' => $jawaban,
+                ];
+            }
+
+            $aktif = null;
+        };
+
+        foreach ($this->bagianOutline() as $bagian) {
+            $judul = trim((string) ($bagian['judul'] ?? ''));
+
+            if (! str_ends_with($judul, '?')) {
+                $simpanAktif();
+                continue;
+            }
+
+            $simpanAktif();
+            $aktif = [
+                'pertanyaan' => $judul,
+                'jawaban' => $bagian['isi'] ?? [],
+            ];
+        }
+
+        $simpanAktif();
+
+        return $faq;
+    }
+
+    public function evaluasiIntentPerBagian(): array
+    {
+        $bagian = $this->bagianOutline();
+        $hasil = collect($bagian)->map(function (array $item): array {
+            $teks = trim(($item['judul'] ?? '').' '.implode(' ', $item['isi'] ?? []));
+            $intent = $this->intentPencarianDariTeks($teks);
+
+            return [
+                'judul' => $item['judul'] ?? '',
+                'intent' => $intent,
+            ];
+        })->filter(fn (array $item) => $item['judul'] !== '')->values();
+
+        $terbaca = $hasil->where('intent.kode', '!=', 'belum-terbaca')->count();
+        $total = max($hasil->count(), 1);
+        $persentase = (int) round(($terbaca / $total) * 100);
+
+        return [
+            'bagian' => $hasil->all(),
+            'persentase' => $hasil->isEmpty() ? 0 : $persentase,
+            'cukup_terbaca' => $hasil->count() >= 2 && $persentase >= 60,
+        ];
+    }
+
+    public function evaluasiSchemaReadiness(): array
+    {
+        $faq = $this->faqDariOutline();
+        $bagian = $this->bagianOutline();
+        $checks = [
+            [
+                'label' => 'Article metadata inti',
+                'ok' => filled($this->judul_seo) && filled($this->deskripsi_seo) && filled($this->ringkasan),
+                'detail' => 'Periksa judul SEO, deskripsi SEO, dan ringkasan sebagai fondasi Article schema.',
+            ],
+            [
+                'label' => 'Author context tersedia',
+                'ok' => filled($this->bio_penulis),
+                'detail' => 'Bio penulis membantu memperkuat identitas author pada metadata artikel.',
+            ],
+            [
+                'label' => 'FAQ schema siap',
+                'ok' => count($faq) >= 2,
+                'detail' => 'Minimal 2 FAQ lengkap dibutuhkan agar schema FAQ layak dipasang.',
+            ],
+            [
+                'label' => 'Media context tersedia',
+                'ok' => filled($this->alt_gambar_unggulan),
+                'detail' => 'Alt gambar membantu memberi konteks visual untuk metadata artikel.',
+            ],
+            [
+                'label' => 'Struktur article body siap',
+                'ok' => count($bagian) >= 3,
+                'detail' => 'Minimal 3 section outline membantu struktur Article schema lebih utuh.',
+            ],
+        ];
+
+        $lolos = collect($checks)->where('ok', true)->count();
+        $total = max(count($checks), 1);
+        $persentase = (int) round(($lolos / $total) * 100);
+
+        return [
+            'checks' => $checks,
+            'lolos' => $lolos,
+            'total' => $total,
+            'persentase' => $persentase,
+            'cukup_siap' => $persentase >= 80,
+        ];
+    }
+
     public function evaluasiKesiapan(): array
     {
         $keyword = trim((string) $this->kata_kunci_utama);
@@ -222,6 +444,8 @@ class Artikel extends Model
         $keywordNormalized = str((string) $keyword)->lower()->slug(' ');
         $judulNormalized = str((string) $judul)->lower()->slug(' ');
         $slugNormalized = str((string) $slug)->lower()->replace('-', ' ');
+        $schemaReadiness = $this->evaluasiSchemaReadiness();
+        $intentPerBagian = $this->evaluasiIntentPerBagian();
 
         $checks = [
             [
@@ -312,9 +536,29 @@ class Artikel extends Model
                     ? 'Checklist editorial sudah lengkap.'
                     : 'Lengkapi checklist kesiapan editorial.',
             ],
+            [
+                'judul' => 'Schema readiness cukup kuat',
+                'ok' => $schemaReadiness['cukup_siap'],
+                'bobot' => 10,
+                'blokir_publikasi' => false,
+                'pesan' => $schemaReadiness['cukup_siap']
+                    ? 'Skor schema '.$schemaReadiness['persentase'].'% dengan '.$schemaReadiness['lolos'].' dari '.$schemaReadiness['total'].' komponen siap.'
+                    : 'Skor schema baru '.$schemaReadiness['persentase'].'%. Lengkapi metadata, FAQ, media, dan struktur section.',
+            ],
+            [
+                'judul' => 'Intent per section outline terbaca',
+                'ok' => $intentPerBagian['cukup_terbaca'],
+                'bobot' => 10,
+                'blokir_publikasi' => false,
+                'pesan' => $intentPerBagian['cukup_terbaca']
+                    ? 'Intent terbaca pada mayoritas section outline.'
+                    : 'Perjelas judul section agar intent per bagian lebih mudah terbaca.',
+            ],
         ];
 
-        $skor = collect($checks)->sum(fn (array $check) => $check['ok'] ? $check['bobot'] : 0);
+        $totalBobot = collect($checks)->sum('bobot');
+        $nilaiMentah = collect($checks)->sum(fn (array $check) => $check['ok'] ? $check['bobot'] : 0);
+        $skor = (int) round(($nilaiMentah / max($totalBobot, 1)) * 100);
 
         return [
             'skor' => $skor,
@@ -324,6 +568,8 @@ class Artikel extends Model
                 default => 'Perlu Revisi',
             },
             'checks' => $checks,
+            'schema_readiness' => $schemaReadiness,
+            'intent_per_bagian' => $intentPerBagian,
             'siap_terbit' => ! collect($checks)->contains(fn (array $check) => $check['blokir_publikasi'] && ! $check['ok']),
         ];
     }

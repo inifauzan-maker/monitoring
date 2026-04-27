@@ -34,6 +34,47 @@ class ArtikelTest extends TestCase
             ->assertSee('Daftar artikel');
     }
 
+    public function test_form_artikel_menampilkan_toolbar_editor_dan_panduan_isian(): void
+    {
+        $pengguna = User::factory()->denganLevelAkses(LevelAksesPengguna::LEVEL_5)->create();
+        KategoriArtikel::factory()->create(['nama' => 'SEO', 'slug' => 'seo']);
+
+        $response = $this
+            ->actingAs($pengguna)
+            ->get(route('tools.artikel.create'));
+
+        $response
+            ->assertOk()
+            ->assertSee('Konten Utama')
+            ->assertSee('H1')
+            ->assertSee('Bullet')
+            ->assertSee('Problem-Solution-CTA')
+            ->assertSee('How-to')
+            ->assertSee('Listicle')
+            ->assertSee('FAQ SEO')
+            ->assertSee('Generate Outline')
+            ->assertSee('How-to SEO')
+            ->assertSee('Listicle SEO')
+            ->assertSee('Landing SEO')
+            ->assertSee('Keyword Turunan')
+            ->assertSee('FAQ dari Keyword')
+            ->assertSee('People also ask')
+            ->assertSee('Salin Struktur')
+            ->assertSee('Salin JSON-LD')
+            ->assertSee('Contoh struktur cepat')
+            ->assertSee('Preview Live Konten')
+            ->assertSee('Indikator Intent Pencarian')
+            ->assertSee('Intent per Section Outline')
+            ->assertSee('Mobile Preview')
+            ->assertSee('Preview FAQ JSON-LD')
+            ->assertSee('Validator Struktur FAQ')
+            ->assertSee('Schema Readiness')
+            ->assertSee('Schema readiness cukup kuat')
+            ->assertSee('Contoh: Strategi Follow Up WhatsApp')
+            ->assertSee('Pengaturan Artikel')
+            ->assertSee('Checklist Editorial');
+    }
+
     public function test_pengguna_bisa_membuka_dashboard_editorial_artikel(): void
     {
         $pengguna = User::factory()->denganLevelAkses(LevelAksesPengguna::LEVEL_5)->create();

@@ -47,6 +47,15 @@ return [
             'report' => false,
         ],
 
+        'avatar_public' => [
+            'driver' => 'local',
+            'root' => public_path(trim((string) env('AVATAR_LINK_PUBLIC_PATH', 'uploads'), '/\\')),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/'.trim((string) env('AVATAR_LINK_PUBLIC_PATH', 'uploads'), '/\\'),
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -75,6 +84,12 @@ return [
 
     'links' => [
         public_path('storage') => storage_path('app/public'),
+    ],
+
+    'avatar_link' => [
+        'disk' => env('AVATAR_LINK_DISK', 'avatar_public'),
+        'legacy_disk' => env('AVATAR_LINK_LEGACY_DISK', 'public'),
+        'directory' => trim((string) env('AVATAR_LINK_DIRECTORY', 'avatar-link'), '/\\'),
     ],
 
 ];

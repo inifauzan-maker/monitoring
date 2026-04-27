@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+use App\Support\AvatarLinkPublikStorage;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -79,3 +81,85 @@ Artisan::command('app:bersihkan-data-contoh {--force : Jalankan pembersihan tanp
 
     return self::SUCCESS;
 })->purpose('Membersihkan data contoh/demo dari modul utama aplikasi');
+
+Artisan::command('app:rapikan-avatar-link {--force : Jalankan perapian tanpa konfirmasi tambahan} {--hapus-legacy : Hapus file avatar lama setelah berhasil dipindahkan}', function () {
+    if (! $this->option('force')) {
+        $this->warn('Perintah ini akan merapikan path avatar publik dan memindahkan file lama ke disk avatar baru jika diperlukan.');
+
+        if (! $this->confirm('Lanjutkan perapian avatar link publik?')) {
+            $this->comment('Perapian avatar dibatalkan.');
+
+            return self::SUCCESS;
+        }
+    }
+
+    $diproses = 0;
+    $dirapikan = 0;
+    $dipindahkan = 0;
+    $hilang = 0;
+    $hapusLegacy = (bool) $this->option('hapus-legacy');
+    $diskAktif = AvatarLinkPublikStorage::disk();
+    $diskLegacy = AvatarLinkPublikStorage::legacyDisk();
+
+    User::query()
+        ->whereNotNull('avatar_link')
+        ->select(['id', 'email', 'avatar_link'])
+        ->orderBy('id')
+        ->chunkById(100, function ($penggunaBatch) use (&$diproses, &$dirapikan, &$dipindahkan, &$hilang, $hapusLegacy, $diskAktif, $diskLegacy): void {
+            foreach ($penggunaBatch as $pengguna) {
+                $diproses++;
+                $pathAwal = $pengguna->avatar_link;
+                $pathNormal = AvatarLinkPublikStorage::normalisasiPath($pathAwal);
+
+                if (! $pathNormal) {
+                    $hilang++;
+                    continue;
+                }
+
+                $sudahAdaDiDiskAktif = \Illuminate\Support\Facades\Storage::disk($diskAktif)->exists($pathNormal);
+                $adaDiDiskLegacy = $diskLegacy !== $diskAktif
+                    && \Illuminate\Support\Facades\Storage::disk($diskLegacy)->exists($pathNormal);
+                $pathMigrasi = AvatarLinkPublikStorage::migrasikanJikaPerlu(
+                    $pathNormal,
+                    $hapusLegacy,
+                );
+
+                if ($pathMigrasi && $pathMigrasi === $pathNormal && $pathAwal !== $pathNormal) {
+                    $pengguna->forceFill([
+                        'avatar_link' => $pathNormal,
+                    ])->save();
+
+                    $dirapikan++;
+                    continue;
+                }
+
+                if ($pathMigrasi) {
+                    if ($pathAwal !== $pathMigrasi) {
+                        $pengguna->forceFill([
+                            'avatar_link' => $pathMigrasi,
+                        ])->save();
+
+                        $dirapikan++;
+                    }
+
+                    if (! $sudahAdaDiDiskAktif && $adaDiDiskLegacy) {
+                        $dipindahkan++;
+                    }
+
+                    continue;
+                }
+
+                $hilang++;
+            }
+        });
+
+    $this->info('Perapian avatar link publik selesai.');
+    $this->line("Diproses: {$diproses}");
+    $this->line("Path dirapikan: {$dirapikan}");
+    $this->line("File dipindahkan: {$dipindahkan}");
+    $this->line("File tidak ditemukan: {$hilang}");
+    $this->line('Disk avatar aktif: '.AvatarLinkPublikStorage::disk());
+    $this->line('Direktori avatar: '.AvatarLinkPublikStorage::directory());
+
+    return self::SUCCESS;
+})->purpose('Merapikan storage avatar publik agar konsisten di semua environment');

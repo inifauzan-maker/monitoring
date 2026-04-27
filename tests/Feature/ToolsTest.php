@@ -38,6 +38,7 @@ class ToolsTest extends TestCase
     public function test_pengguna_bisa_memperbarui_profil_link_publik_dan_domain_kustom(): void
     {
         Storage::fake('public');
+        Storage::fake('avatar_public');
 
         $pengguna = User::factory()->denganLevelAkses(LevelAksesPengguna::LEVEL_5)->create([
             'slug_link' => 'profil-awal-1',
@@ -77,7 +78,7 @@ class ToolsTest extends TestCase
         $pengguna->refresh();
 
         $this->assertNotNull($pengguna->avatar_link);
-        Storage::disk('public')->assertExists($pengguna->avatar_link);
+        Storage::disk('avatar_public')->assertExists($pengguna->avatar_link);
     }
 
     public function test_pengguna_bisa_menambah_link_dengan_url_dinormalisasi(): void
@@ -246,11 +247,11 @@ class ToolsTest extends TestCase
 
     public function test_halaman_link_publik_menampilkan_nama_kustom_dan_avatar(): void
     {
-        Storage::fake('public');
+        Storage::fake('avatar_public');
 
         $avatarPath = UploadedFile::fake()
             ->image('avatar-publik.png', 480, 480)
-            ->store('avatar-link', 'public');
+            ->store('avatar-link', 'avatar_public');
 
         $pengguna = User::factory()->create([
             'slug_link' => 'avatar-link-1',
@@ -266,7 +267,50 @@ class ToolsTest extends TestCase
             ->assertSee('Brand Monitoring')
             ->assertSee('6281 2345 6789')
             ->assertSee('Chat WhatsApp')
+            ->assertSee(Storage::disk('avatar_public')->url($avatarPath), false);
+    }
+
+    public function test_halaman_link_publik_tetap_menampilkan_avatar_legacy_jika_belum_dimigrasikan(): void
+    {
+        Storage::fake('public');
+
+        $avatarPath = UploadedFile::fake()
+            ->image('avatar-legacy.png', 480, 480)
+            ->store('avatar-link', 'public');
+
+        $pengguna = User::factory()->create([
+            'slug_link' => 'avatar-legacy-1',
+            'nama_tampil_link' => 'Legacy Avatar',
+            'avatar_link' => $avatarPath,
+        ]);
+
+        $this->get(route('publik.link.show', $pengguna))
+            ->assertOk()
             ->assertSee(Storage::disk('public')->url($avatarPath), false);
+    }
+
+    public function test_perintah_rapikan_avatar_link_memindahkan_file_legacy_ke_disk_baru(): void
+    {
+        Storage::fake('public');
+        Storage::fake('avatar_public');
+
+        $avatarPath = UploadedFile::fake()
+            ->image('avatar-legacy-command.png', 480, 480)
+            ->store('avatar-link', 'public');
+
+        $pengguna = User::factory()->create([
+            'slug_link' => 'avatar-command-1',
+            'avatar_link' => 'storage/'.$avatarPath,
+        ]);
+
+        $this->artisan('app:rapikan-avatar-link', ['--force' => true])
+            ->expectsOutputToContain('Perapian avatar link publik selesai.')
+            ->assertSuccessful();
+
+        $pengguna->refresh();
+
+        $this->assertSame($avatarPath, $pengguna->avatar_link);
+        Storage::disk('avatar_public')->assertExists($avatarPath);
     }
 
     public function test_halaman_link_publik_memakai_fallback_inisial_jika_avatar_tidak_tersedia(): void

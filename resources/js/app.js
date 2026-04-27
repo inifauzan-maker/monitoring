@@ -165,16 +165,30 @@ const inisialisasiSidebarCollapsible = () => {
     });
 };
 
+const inisialisasiTooltip = () => {
+    const BootstrapTooltip = window.bootstrap?.Tooltip;
+
+    if (! BootstrapTooltip) {
+        return;
+    }
+
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((elemen) => {
+        BootstrapTooltip.getOrCreateInstance(elemen);
+    });
+};
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         inisialisasiTema();
         inisialisasiSalinTeks();
         inisialisasiFokusEditorLink();
         inisialisasiSidebarCollapsible();
+        inisialisasiTooltip();
     }, { once: true });
 } else {
     inisialisasiTema();
     inisialisasiSalinTeks();
     inisialisasiFokusEditorLink();
     inisialisasiSidebarCollapsible();
+    inisialisasiTooltip();
 }

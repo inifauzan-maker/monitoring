@@ -23,6 +23,7 @@ class ArtikelFactory extends Factory
             'judul' => $judul,
             'slug' => Str::slug($judul),
             'kata_kunci_utama' => fake()->words(3, true),
+            'keyword_turunan' => implode(",\n", fake()->words(4)),
             'ringkasan' => fake()->paragraph(),
             'konten' => '<p>'.implode('</p><p>', fake()->paragraphs(4)).'</p>',
             'kategori_artikel_id' => KategoriArtikel::factory(),
